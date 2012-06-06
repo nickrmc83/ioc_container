@@ -1,3 +1,13 @@
+/*
+ * IOC.h - An implementation of a IOC dependency injection
+ * engine
+ *
+ * Copyright (c) 2012 Nicholas A. Smith (nickrmc83@gmail.com)
+ * Distributed under the Boost software license 1.0, 
+ * see boost.org for a copy.
+ */ 
+
+
 #ifndef IOC_H
 #define IOC_H
 

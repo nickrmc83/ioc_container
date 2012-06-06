@@ -1,12 +1,14 @@
 /*
- * Tuple.h
+ * Tuple.h - A simple implementation of a Tuple
  *
- *  Created on: 3 Feb 2012
- *      Author: nick
+ * Copyright (c) 2012 Nicholas A. Smith (nickrmc83@gmail.com)
+ * Distributed under the Boost software license 1.0, 
+ * see boost.org for a copy.
  */
 
 #ifndef TUPLE_H
 #define TUPLE_H
+
 #include <ioc_container/TemplateHelpers.h>
 #include <exception>
 
