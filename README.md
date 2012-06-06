@@ -190,7 +190,7 @@ To build against the Clang compiler use the commandline below:
 
 make clang
 
-To build a g++ executable use the below commandline:
+To build a g++ executable use the commandline below:
 
 make gcc
 
