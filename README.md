@@ -180,3 +180,18 @@ void RegisterAndResolve()
 
 }
 
+Q) Are there any unit tests? Where can I get examples of using the IOC container?
+
+A) Yes there are unit tests. These unit tests provide a good way of learning how to configure the IOC container as they are designed to excercise all aspects of it.
+
+The unit tests can be found in the sub-folder ./test. To build the unit tests you will need either Clang 3.0 installed or g++ 4.7. The unit test application is called TestApp and returns a non-zero result if any test fail. 
+
+To build against the Clang compiler use the commandline below:
+
+make clang
+
+To build a g++ executable use the below commandline:
+
+make gcc
+
+If the compiler has troubles finding the necessary standard library includes you may need to massage the makefile.
