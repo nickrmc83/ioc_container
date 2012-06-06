@@ -1,5 +1,15 @@
+/*
+ * TemplateHelpers.h - Some helper templates for default construction
+ *                     and destruction of template types
+ *
+ * Copyright (c) 2012 Nicholas A. Smith (nickrmc83@gmail.com)
+ * Distributed under the Boost software license 1.0, 
+ * see boost.org for a copy.
+ */
+
 #ifndef TEMPLATE_HELPERS_H
 #define TEMPLATE_HELPERS_H
+
 template<typename T>
 struct TemplateHelper
 {

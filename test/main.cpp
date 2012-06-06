@@ -1,3 +1,11 @@
+/*
+ * main.cpp - Unit tests to excersise IOC container
+ *
+ * Copyright (c) 2012 Nicholas A. Smith (nickrmc83@gmail.com)
+ * Distributed under the Boost software license 1.0, 
+ * see boost.org for a copy.
+ */
+
 #include <ioc_container/IOC.h>
 #include <iostream>
 #include <memory>
