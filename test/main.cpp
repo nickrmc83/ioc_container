@@ -6,7 +6,7 @@
  * see boost.org for a copy.
  */
 
-#include <ioc_container/IOC.h>
+#include <ioc_container/ioc.h>
 #include <iostream>
 #include <memory>
 #include <vector>

@@ -9,7 +9,7 @@
 #ifndef TUPLE_H
 #define TUPLE_H
 
-#include <ioc_container/TemplateHelpers.h>
+#include <ioc_container/template_helpers.h>
 #include <exception>
 
 template<typename ...ArgTypes>
