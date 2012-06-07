@@ -1,5 +1,5 @@
 /*
- * Tuple.h - A simple implementation of a Tuple
+ * tuple.h - A simple implementation of a Tuple
  *
  * Copyright (c) 2012 Nicholas A. Smith (nickrmc83@gmail.com)
  * Distributed under the Boost software license 1.0, 
@@ -12,213 +12,215 @@
 #include <ioc_container/template_helpers.h>
 #include <exception>
 
-template<typename ...ArgTypes>
-class SimpleTuple;
+template<typename ...argtypes>
+class simple_tuple;
 
 // Specialised final item in tuple string
 template<>
-class SimpleTuple<>
+class simple_tuple<>
 {
 	public:
-		static const size_t TupleCount = 0;
-		typedef void ValueType;
+		static const size_t tuple_count = 0;
+		typedef void value_type;
 		
-        SimpleTuple()
+        simple_tuple()
 		{
 		}
 
-		virtual ~SimpleTuple()
+		virtual ~simple_tuple()
 		{
 			// Get rid of warnings
 		}
 
-        void Clear()
+        void clear()
         {
         }
 
-		void Set()
+		void set()
 		{
 		}
 
-		void GetValue() const
+		void get_value() const
 		{
 		}
 
-		void SetValue()
+		void set_value()
 		{
 		}
 };
 
 // Generic tuple.
-template<typename FirstType, typename ...RestTypes>
-class SimpleTuple<FirstType, RestTypes...> : public SimpleTuple<RestTypes...>
+template<typename firsttype, typename ...resttypes>
+class simple_tuple<firsttype, resttypes...> : public simple_tuple<resttypes...>
 {
 	private:
-        bool Clearable;
-		FirstType Value;
+        bool clearable;
+		firsttype value;
 
 	public:
-		static const size_t TupleCount = sizeof...(RestTypes) + 1;
-		typedef FirstType ValueType;
+		static const size_t tuple_count = sizeof...(resttypes) + 1;
+		typedef firsttype value_type;
 
-		SimpleTuple( const FirstType &Arg1, RestTypes ... Rest )
-				: SimpleTuple<RestTypes...>( Rest... ), 
-                Clearable( true ), 
-                Value( Arg1 )
+		simple_tuple( const firsttype &arg1, resttypes ... rest )
+				: simple_tuple<resttypes...>( rest... ), 
+                clearable( true ), 
+                value( arg1 )
 		{
 		}
 
-		SimpleTuple() : SimpleTuple<RestTypes...>()
+		simple_tuple() : simple_tuple<resttypes...>(),
+                         clearable( true ),
+                         value( template_helper<firsttype>::default_value() )
 		{
 		}
 
-        bool HasClearableValue() const
+        bool has_clearable_value() const
         {
-            return Clearable;
+            return clearable;
         }
 
-        void SetClearableValue( bool IsClearableIn )
+        void set_clearable_value( bool is_clearable_in )
         {
-            Clearable = IsClearableIn;
+            clearable = is_clearable_in;
         }
 
-        void ClearValue()
+        void clear_value()
         {
-            if( Clearable )
+            if( clearable )
             {
-                TemplateHelper<FirstType>::Destruct( Value );
-                Clearable = false;
+                template_helper<firsttype>::destruct( value );
+                clearable = false;
             }
         }
 
-        void Clear()
+        void clear()
         {
             // Destruct internal item
-            ClearValue();
-            Next().Clear(); 
+            clear_value();
+            next().clear(); 
         }
 
-		SimpleTuple<RestTypes...> &Next()
+		simple_tuple<resttypes...> &next()
 		{
 			return ( *this );
 		}
 		
-		const SimpleTuple<RestTypes...> &NextRef() const
+		const simple_tuple<resttypes...> &next_ref() const
 		{
 			return ( *this );
 		}
 
-		void SetValue( const FirstType &ValueIn )
+		void set_value( const firsttype &value_in )
 		{
-			Value = ValueIn;
+			value = value_in;
 		}
 
-		void Set( const FirstType &ValueIn, RestTypes ...Rest )
+		void set( const firsttype &value_in, resttypes ...rest )
 		{
-			Value = ValueIn;
-			SimpleTuple<RestTypes...>::Set( Rest... );
+			value = value_in;
+			simple_tuple<resttypes...>::set( rest... );
 		}
 
-		FirstType GetValue() const
+		firsttype get_value() const
 		{
-			return Value;
+			return value;
 		}
 
-		FirstType &GetValueRef() const
+		firsttype &get_value_ref() const
 		{
-			return Value;
+			return value;
 		}
 };
 
 // Tuple helpers allow easy access to tuple members
-template<size_t Index>
-struct TupleHelperImpl
+template<size_t index>
+struct tuple_helper_impl
 {
-		template<typename TupleType>
-		static auto Get( const TupleType &Tuple )
-		-> decltype( TupleHelperImpl<Index-1>::Get( Tuple.Next() ) )
+		template<typename tupletype>
+		static auto get( const tupletype &tuple )
+		-> decltype( tuple_helper_impl<index-1>::get( tuple.next() ) )
 		{
-			return TupleHelperImpl<Index - 1>::Get( Tuple.Next() );
+			return tuple_helper_impl<index - 1>::get( tuple.next() );
 		}
 
-		template<typename TupleType>
-		static auto GetRef( const TupleType &Tuple )
-		-> decltype( TupleHelperImpl<Index-1>::GetRef( Tuple.NextRef() ) )
+		template<typename tupletype>
+		static auto get_ref( const tupletype &tuple )
+		-> decltype( tuple_helper_impl<index-1>::get_ref( tuple.next_ref() ) )
 		{
-			return TupleHelperImpl<Index - 1>::GetRef( Tuple.NextRef() );
+			return tuple_helper_impl<index - 1>::get_ref( tuple.next_ref() );
 		}
 
-		template<typename FunctionType, typename TupleType, typename ...ArgTypes>
-		static auto Call(
-				FunctionType Func,
-				const TupleType &Tuple,
-				ArgTypes ...Args )
-				-> decltype( TupleHelperImpl<Index-1>::Call( Func, Tuple.NextRef(), Args..., Tuple.GetValue() ) )
+		template<typename functiontype, typename tupletype, typename ...argtypes>
+		static auto call(
+				functiontype func,
+				const tupletype &tuple,
+				argtypes ...args )
+				-> decltype( tuple_helper_impl<index-1>::call( func, tuple.next_ref(), args..., tuple.get_value() ) )
 		{
-			return TupleHelperImpl<Index - 1>::Call( Func, Tuple.NextRef(), Args...,
-					Tuple.GetValue() );
+			return tuple_helper_impl<index - 1>::call( func, tuple.next_ref(), args...,
+					tuple.get_value() );
 		}
 
-		template<typename FunctionType, typename TupleType, typename ...ArgTypes>
-		static auto CallRef(
-				FunctionType Func,
-				const TupleType &Tuple,
-				const ArgTypes &...Args )
-				-> decltype( TupleHelperImpl<Index-1>::CallRef( Func, Tuple.NextRef(), Args..., Tuple.GetValueRef() ) )
+		template<typename functiontype, typename tupletype, typename ...argtypes>
+		static auto call_ref(
+				functiontype func,
+				const tupletype &tuple,
+				const argtypes &...args )
+				-> decltype( tuple_helper_impl<index-1>::call_ref( func, tuple.next_ref(), args..., tuple.get_value_ref() ) )
 		{
-			return TupleHelperImpl<Index - 1>::CallRef( Func, Tuple.NextRef(), Args...,
-					Tuple.GetValueRef() );
+			return tuple_helper_impl<index - 1>::call_ref( func, tuple.next_ref(), args...,
+					tuple.get_value_ref() );
 		}
 };
 
 template<>
-struct TupleHelperImpl<0>
+struct tuple_helper_impl<0>
 {
-		template<typename TupleType>
-		static auto Get( const TupleType &Tuple )
-		-> decltype( Tuple.GetValue() )
+		template<typename tupletype>
+		static auto get( const tupletype &tuple )
+		-> decltype( tuple.get_value() )
 		{
-			return Tuple.GetValue();
+			return tuple.get_value();
 		}
 
-		template<typename TupleType>
-		static auto GetRef( const TupleType &Tuple )
-		-> decltype( Tuple.GetValueRef() )
+		template<typename tupletype>
+		static auto get_ref( const tupletype &tuple )
+		-> decltype( tuple.Get_value_ref() )
 		{
-			return Tuple.GetValueRef();
+			return tuple.get_value_ref();
 		}
 
-		template<typename FunctionType, typename TupleType, typename ...ArgTypes>
-		static auto Call( FunctionType Func, const TupleType &Tuple,
-				ArgTypes ...Args )
-				-> decltype( Func( Args... ) )
+		template<typename functiontype, typename tupletype, typename ...argtypes>
+		static auto call( functiontype func, const tupletype &tuple,
+				argtypes ...args )
+				-> decltype( func( args... ) )
 		{
-			return Func( Args... );
+			return func( args... );
 		}
 
-		template<typename FunctionType, typename TupleType, typename ...ArgTypes>
-		static auto CallRef( FunctionType Func, const TupleType &Tuple,
-				const ArgTypes &...Args )
-				-> decltype( Func( Args... ) )
+		template<typename functiontype, typename tupletype, typename ...argtypes>
+		static auto call_ref( functiontype func, const tupletype &tuple,
+				const argtypes &...args )
+				-> decltype( func( args... ) )
 		{
-			return Func( Args... );
+			return func( args... );
 		}
 };
 
-struct TupleHelper
+struct tuple_helper
 {
-    template<typename FunctionType, typename TupleType>
-    static auto Call( FunctionType Func, const TupleType &Tuple )
-    -> decltype( TupleHelperImpl<TupleType::TupleCount>::template Call<FunctionType, TupleType>( Func, Tuple ) )
+    template<typename functiontype, typename tupletype>
+    static auto call( functiontype func, const tupletype &tuple )
+    -> decltype( tuple_helper_impl<tupletype::tuple_count>::template call<functiontype, tupletype>( func, tuple ) )
     {
-        return TupleHelperImpl<TupleType::TupleCount>::template Call<FunctionType, TupleType>( Func, Tuple );
+        return tuple_helper_impl<tupletype::tuple_count>::template call<functiontype, tupletype>( func, tuple );
     }
 
-    template<typename FunctionType, typename TupleType>
-    static auto CallRef( FunctionType Func, const TupleType &Tuple )
-    -> decltype( TupleHelperImpl<TupleType::TupleCount>::template CallRef<FunctionType, TupleType>( Func, Tuple ) )
+    template<typename functiontype, typename tupletype>
+    static auto CallRef( functiontype func, const tupletype &tuple )
+    -> decltype( tuple_helper_impl<tupletype::tuple_count>::template call_ref<functiontype, tupletype>( func, tuple ) )
     {
-        return TupleHelperImpl<TupleType::TupleCount>::template CallRef<FunctionType, TupleType>( Func, Tuple );
+        return tuple_helper_impl<tupletype::tuple_count>::template call_ref<functiontype, tupletype>( func, tuple );
     }
 };
 

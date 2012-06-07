@@ -1,5 +1,5 @@
 /*
- * TemplateHelpers.h - Some helper templates for default construction
+ * template_helpers.h - Some helper templates for default construction
  *                     and destruction of template types
  *
  * Copyright (c) 2012 Nicholas A. Smith (nickrmc83@gmail.com)
@@ -11,24 +11,23 @@
 #define TEMPLATE_HELPERS_H
 
 template<typename T>
-struct TemplateHelper
+struct template_helper
 {
-	template<typename ...ArgTypes>
-	static T Default( ArgTypes ...Args )
+	template<typename ...argtypes>
+	static T default_value( argtypes ...args )
 	{
 		// This will be compiled out during optimisation.
-		T Result( Args... );
-		return Result;
+		return T( args... );
 	}
 
-	template<typename ...ArgTypes>
-	static T DefaultNew( ArgTypes ...Args )
+	template<typename ...argtypes>
+	static T default_new( argtypes ...args )
 	{
 		// This will be compiled out during optimisation.
-		return Default( Args... );
+		return template_helper::default_value( args... );
 	}
 
-	static void Destruct( T Object )
+	static void destruct( T object )
 	{
 		// This is a reference type so do not do anything.
 		// This will be compiled out during optimisation.
@@ -36,29 +35,28 @@ struct TemplateHelper
 };
 
 template<typename T>
-struct TemplateHelper<T *>
+struct template_helper<T *>
 {
-    template<typename ...ArgTypes>
-	static T *Default()
+    template<typename ...argtypes>
+	static T *default_value()
 	{
-		T *Result = NULL;
-		return Result;
+		return NULL;
 	}
 
-	template<typename ...ArgTypes>
-	static T *DefaultNew( ArgTypes ...Args )
+	template<typename ...argtypes>
+	static T *default_new( argtypes ...args )
 	{
 		// This will be compiled out during optimisation.
-		return new T( Args... );
+		return new T( args... );
 	}
 
-	static void Destruct( T *Object )
+	static void destruct( T *object )
 	{
 		// This is a pointer type so delete if not NULL
-		if( Object )
+		if( object )
 		{
-			delete Object;
-			Object = NULL;
+			delete object;
+			object = NULL;
 		}
 	}
 };

@@ -161,10 +161,10 @@ struct ThrowingConcretion : public InterfaceType
 static TestStatus TestConstructor()
 {
     TestStatus Result = TS_Unknown;
-    IOC::Container *Container = NULL;
+    ioc::container *Container = NULL;
     try
     {
-        Container = new IOC::Container();
+        Container = new ioc::container();
         Result = TS_Success;
         
         // Delete the container
@@ -183,10 +183,10 @@ static TestStatus TestConstructor()
 static TestStatus TestDestructor()
 {
     TestStatus Result = TS_Unknown;
-    IOC::Container *Container = NULL;
+    ioc::container *Container = NULL;
     try
     {
-        Container = new IOC::Container();
+        Container = new ioc::container();
         delete Container;
         Container = NULL;
         Result = TS_Success;
@@ -204,11 +204,11 @@ static TestStatus TestDestructor()
 static TestStatus TestRegister()
 {
     TestStatus Result = TS_Registration_Error;
-    IOC::Container Container;
+    ioc::container Container;
 
     try
     {
-        Container.Register<InterfaceType *, Concretion *>();
+        Container.register_type<InterfaceType *, Concretion *>();
         Result = TS_Success;
     }
     catch( const std::exception &e )
@@ -223,11 +223,11 @@ static TestStatus TestRegister()
 static TestStatus TestTypeIsRegistered()
 {
     TestStatus Result = TS_Unknown_Registration;
-    IOC::Container Container;
+    ioc::container Container;
     try
     {
-        Container.Register<InterfaceType *, Concretion *>();
-        if( Container.TypeIsRegistered<InterfaceType *>() )
+        Container.register_type<InterfaceType *, Concretion *>();
+        if( Container.type_is_registered<InterfaceType *>() )
         {
             Result = TS_Success;
         }
@@ -245,17 +245,17 @@ static TestStatus TestTypeIsRegistered()
 // for testing.
 static TestStatus TestRegisterResolve()
 {   
-    IOC::Container Container;
+    ioc::container Container;
     TestStatus Result = TS_Registration_Error;
     try
     {
         // Register
         std::cout << "Registering Concretion as Interface" << std::endl;
-        Container.Register<InterfaceType *, Concretion *>();
+        Container.register_type<InterfaceType *, Concretion *>();
         Result = TS_Resolution_Error;
         // Resolve
         std::cout << "Resolving Interface" << std::endl;
-        std::unique_ptr<InterfaceType> Value( Container.Resolve<InterfaceType *>() );
+        std::unique_ptr<InterfaceType> Value( Container.resolve<InterfaceType *>() );
         if( Value.get() && Value->Success() )
         {
             std::cout << "Successfully resolved Interface" << std::endl;
@@ -275,24 +275,24 @@ static TestStatus TestRegisterResolve()
 static TestStatus TestRegisterResolveComplexType()
 {
     TestStatus Result = TS_Registration_Error;
-    IOC::Container Container;
+    ioc::container Container;
     try
     {
         ResetCounters();
 
         // First register a simple type
-        Container.Register<Concretion *, Concretion *>();
+        Container.register_type<Concretion *, Concretion *>();
         // Second register a type which requires an instance
         // of our simple type. This forces the Resolver
         // to find a simple type before it attempts to
         // construct our complex type.
-        Container.Register<ComplexConcretion *, 
+        Container.register_type<ComplexConcretion *, 
             ComplexConcretion *, 
             Concretion *>();
         Result = TS_Resolution_Error;
 
         // Attempt to resolve the complex type
-        ComplexConcretion *Inst = Container.Resolve<ComplexConcretion *>();
+        ComplexConcretion *Inst = Container.resolve<ComplexConcretion *>();
 
         if( Inst )
         {
@@ -311,11 +311,11 @@ static TestStatus TestRegisterResolveComplexType()
 static TestStatus TestRegisterWithName()
 {
     TestStatus Result = TS_Registration_Error;
-    IOC::Container Container;
+    ioc::container Container;
     try
     {
-        Container.RegisterWithName<InterfaceType *, Concretion *>( "ThisName" );
-        if( Container.TypeIsRegistered<InterfaceType *>( "ThisName" ) )
+        Container.register_type_with_name<InterfaceType *, Concretion *>( "ThisName" );
+        if( Container.type_is_registered<InterfaceType *>( "ThisName" ) )
         {
             Result = TS_Success;
         }        
@@ -332,16 +332,16 @@ static TestStatus TestRegisterWithName()
 static TestStatus TestRegisterTypeMoreThanOnce()
 {
     TestStatus Result = TS_Registration_Error;
-    IOC::Container Container;
+    ioc::container Container;
     try
     {
-        Container.Register<InterfaceType *, Concretion *>();
+        Container.register_type<InterfaceType *, Concretion *>();
         try
         {
-            Container.Register<InterfaceType *, Concretion *>();
+            Container.register_type<InterfaceType *, Concretion *>();
             std::cout << "Why?" << std::endl;
         }
-        catch( const IOC::RegistrationException &e )
+        catch( const ioc::registration_exception &e )
         {
             // We expect to catch an exception here
             PrintException( __func__, e );
@@ -361,15 +361,15 @@ static TestStatus TestRegisterTypeMoreThanOnce()
 static TestStatus TestRegisterTypeWithNameMoreThanOnce()
 {
     TestStatus Result = TS_Registration_Error;
-    IOC::Container Container;
+    ioc::container Container;
     try
     {
-        Container.RegisterWithName<InterfaceType *, Concretion *>( "ThisName" );
+        Container.register_type_with_name<InterfaceType *, Concretion *>( "ThisName" );
         try
         {
-            Container.RegisterWithName<InterfaceType *, Concretion *>( "ThisName" );
+            Container.register_type_with_name<InterfaceType *, Concretion *>( "ThisName" );
         }
-        catch( const IOC::RegistrationException &e )
+        catch( const ioc::registration_exception &e )
         {
             // We expect to catch an exception here
             Result = TS_Success;
@@ -387,12 +387,12 @@ static TestStatus TestRegisterTypeWithNameMoreThanOnce()
 static TestStatus TestRegisterMoreThanOneTypeWithTheSameName()
 {
     TestStatus Result = TS_Registration_Error;
-    IOC::Container Container;
+    ioc::container Container;
 
     try
     {
-        Container.RegisterWithName<InterfaceType *, Concretion *>( "ThisName" );
-        Container.RegisterWithName<Concretion *, Concretion *>( "ThisName" );
+        Container.register_type_with_name<InterfaceType *, Concretion *>( "ThisName" );
+        Container.register_type_with_name<Concretion *, Concretion *>( "ThisName" );
         Result = TS_Success;
     }
     catch( const std::exception &e )
@@ -408,16 +408,16 @@ static TestStatus TestRegisterMoreThanOneTypeWithTheSameName()
 static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
 {
 	TestStatus Result = TS_Registration_Error;
-	IOC::Container Container;
+	ioc::container Container;
 	try
 	{
-		Container.Register<InterfaceType *, Concretion *>();
-		Container.Register<ThrowingConcretion *, ThrowingConcretion *, InterfaceType *>();
+		Container.register_type<InterfaceType *, Concretion *>();
+		Container.register_type<ThrowingConcretion *, ThrowingConcretion *, InterfaceType *>();
 		// We expect to catch an error but the constructor variables for
 		// Throwing concretion to have been deleted.
 		try
 		{
-			Container.Resolve<ThrowingConcretion *>();
+			Container.resolve<ThrowingConcretion *>();
 		}
 		catch(const std::exception &e)
 		{
