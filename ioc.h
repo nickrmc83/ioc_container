@@ -122,12 +122,13 @@ namespace ioc
                     // This should get optimised out.
                 }
         };
-
+    
     struct tuple_value_resolver
     {
         template<typename resolvertype, typename ...argtypes>
             static simple_tuple<argtypes...> get( resolvertype *resolver )
-            {  
+            {
+                // we must have a resolver to continue  
                 if( resolver == NULL )
                 {
                     throw null_argument_exception( __func__, "resolver" );
