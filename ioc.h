@@ -44,6 +44,153 @@ namespace ioc
             virtual bool is_destructable() const = 0;
     };
 
+    // BaseFatory extends ifactory to provide some standard
+    // functionality that is required by most concrete
+    // factoy types.
+    template<typename I>
+        class base_factory : public ifactory
+    {
+        private:
+            std::string name;
+            virtual I internal_create_item() const = 0;
+
+        public:
+
+            base_factory( const std::string &name_in ) 
+                : ifactory(), name( name_in )
+            {
+            }
+
+            ~base_factory()
+            {
+            }
+
+            const std::type_info &get_type() const
+            {
+                return typeid(I);
+            }
+
+            const std::string &get_name() const
+            {
+                return name;
+            }
+
+            void *create_item() const
+            {
+                return static_cast<void *>( internal_create_item() );
+            }
+    };
+
+    // DelegateFactory allows delegate objects or routines to be
+    // supplied and called for object construction. All delegate
+    // arguments are resolved by the resolver before being send
+    // to the delegate instance.
+    template<typename I, typename callable, typename ...argtypes>
+        class delegate_factory : public base_factory<I>
+    {
+        private:
+            ioc::container *container_obj;
+            callable callable_obj;
+
+            I internal_create_item() const
+            {
+                // Resolve delgate arguments
+                typedef simple_tuple<argtypes...> this_tuple_type;
+                // Resolve all variables for construction.
+                // If there is an error during resolution
+                // then the Resolver will de-allocate any
+                // already resolved objects for us.
+                I result = template_helper<I>::default_value();
+                this_tuple_type args = 
+                    tuple_value_resolver::get<ioc::container, argtypes...>( container_obj );
+                try
+                {
+                    result = tuple_helper::call( callable_obj, args );
+                }
+                catch( const std::exception &e )
+                {
+                    args.clear();
+                    throw;
+                }
+                return result;
+            }
+
+        public:
+            delegate_factory( const std::string &name_in, 
+                    ioc::container *container_in, const 
+                    callable &callable_obj_in )
+                : base_factory<I>( name_in ), container_obj( container_in ), 
+                callable_obj( callable_obj_in )
+        {
+        }
+
+            ~delegate_factory()
+            {
+            }
+
+            bool is_destructable() const
+            {
+                return true;
+            }
+    };
+
+    // ResolvableFactory extends DelegateFactory by supplying
+    // a standard function which can be used to instantiate
+    // and return an instance of a specific type.
+    template<typename I, typename T, typename ...argtypes>
+        class resolvable_factory 
+        : public delegate_factory<I, T (*)( argtypes...), argtypes...>
+        {
+            private: 
+                static T creator( argtypes ...args )
+                {
+                    return template_helper<T>::default_new( args... );
+                }
+
+            public:
+                resolvable_factory( const std::string &name_in, ioc::container *container_in )
+                    : delegate_factory<I, T (*)( argtypes... ), argtypes...>( name_in, container_in, resolvable_factory::creator )
+                {
+                }
+
+                ~resolvable_factory()
+                {
+                }
+        };
+
+    // isntance_factory stores an instance of the required type.
+    // create_item simply returns the stored instance.
+    // It should be noted that there is no guard around the instance
+    // to stop it being deleted by some other object once it has
+    // been resolved.
+    template<typename I>
+        class instance_factory
+        : public base_factory<I>
+        {
+            private: 
+                I instance;
+
+                I internal_create_item() const
+                {
+                    return instance;
+                }
+
+            public:
+                instance_factory( const std::string &name_in, I instance_in )
+                    : base_factory<I>( name_in ), instance( instance_in )
+                {
+                }
+
+                ~instance_factory()
+                {
+                }
+
+                bool is_destructable() const
+                {
+                    return false;
+                }
+        };
+
     template<size_t index>
         struct tuple_value_resolver_impl
         {
@@ -114,8 +261,8 @@ namespace ioc
                     const std::string &registration_name_in )
                 : std::exception(), type_name( type_name_in ), 
                 registration_name( registration_name_in )
-            {
-            }
+        {
+        }
 
             const std::string &get_type_name() const
             {
@@ -141,155 +288,6 @@ namespace ioc
     class container
     {
         private:
-            // Below are classes that allow items
-            // to be created. Depending on the registration
-            // method a different type of factory object
-            // is added to the internal factory list. Each
-            // factory is specialised to only be able to
-            // create a single type.
-
-            // BaseFatory extends ifactory to provide some standard
-            // functionality that is required by most concrete
-            // factoy types.
-            template<typename I>
-                class base_factory : public ifactory
-            {
-                private:
-                    std::string name;
-                    virtual I internal_create_item() const = 0;
-
-                public:
-
-                    base_factory( const std::string &name_in ) 
-                        : ifactory(), name( name_in )
-                    {
-                    }
-
-                    ~base_factory()
-                    {
-                    }
-
-                    const std::type_info &get_type() const
-                    {
-                        return typeid(I);
-                    }
-
-                    const std::string &get_name() const
-                    {
-                        return name;
-                    }
-
-                    void *create_item() const
-                    {
-                        return static_cast<void *>( internal_create_item() );
-                    }
-            };
-
-            // DelegateFactory allows delegate objects or routines to be
-            // supplied and called for object construction. All delegate
-            // arguments are resolved by the resolver before being send
-            // to the delegate instance.
-            template<typename I, typename callable, typename ...argtypes>
-                class delegate_factory : public base_factory<I>
-            {
-                private:
-                    ioc::container *container_obj;
-                    callable callable_obj;
-
-                    I internal_create_item() const
-                    {
-                        // Resolve delgate arguments
-                        typedef simple_tuple<argtypes...> this_tuple_type;
-                        // Resolve all variables for construction.
-                        // If there is an error during resolution
-                        // then the Resolver will de-allocate any
-                        // already resolved objects for us.
-                        I result = template_helper<I>::default_value();
-                        this_tuple_type args = 
-                            tuple_value_resolver::get<ioc::container, argtypes...>( container_obj );
-                        try
-                        {
-                            result = tuple_helper::call( callable_obj, args );
-                        }
-                        catch( const std::exception &e )
-                        {
-                            args.clear();
-                            throw;
-                        }
-                        return result;
-                    }
-
-                public:
-                    delegate_factory( const std::string &name_in, 
-                            ioc::container *container_in, const 
-                            callable &callable_obj_in )
-                        : base_factory<I>( name_in ), container_obj( container_in ), 
-                        callable_obj( callable_obj_in )
-                    {
-                    }
-
-                    ~delegate_factory()
-                    {
-                    }
-
-                    bool is_destructable() const
-                    {
-                        return true;
-                    }
-            };
-
-            // ResolvableFactory extends DelegateFactory by supplying
-            // a standard function which can be used to instantiate
-            // and return an instance of a specific type.
-            template<typename I, typename T, typename ...argtypes>
-                class resolvable_factory 
-                : public delegate_factory<I, T (*)( argtypes...), argtypes...>
-                {
-                    private: 
-                        static T creator( argtypes ...args )
-                        {
-                            return template_helper<T>::default_new( args... );
-                        }
-
-                    public:
-                        resolvable_factory( const std::string &name_in, ioc::container *container_in )
-                            : delegate_factory<I, T (*)( argtypes... ), argtypes...>( name_in, container_in, resolvable_factory::creator )
-                        {
-                        }
-
-                        ~resolvable_factory()
-                        {
-                        }
-                };
-
-            template<typename I>
-                class instance_factory
-                : public base_factory<I>
-                {
-                    private: 
-                        I instance;
-
-                        I internal_create_item() const
-                        {
-                            return instance;
-                        }
-
-                    public:
-                        instance_factory( const std::string &name_in, I instance_in )
-                            : base_factory<I>( name_in ), instance( instance_in )
-                        {
-                        }
-
-                        ~instance_factory()
-                        {
-                        }
-
-                        bool is_destructable() const
-                        {
-                            return false;
-                        }
-                };
-
             // Internal list of registered types
             std::vector<ifactory *> types;
 
@@ -318,7 +316,7 @@ namespace ioc
                 {
                     destroy_factory( *i );
                 }
-                
+
                 types.clear();
             }
 
