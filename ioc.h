@@ -24,7 +24,7 @@ namespace ioc
     static const std::string ioc_type_name_registration = "IOC Container";
     static const std::string unnamed_type_name_registration = "Unnamed registration";
 
-    // pre-declaration
+    // pre-declaration to satisfy factory types
     class container;
 
     // ifactory is the base interface for a factory 
@@ -127,7 +127,12 @@ namespace ioc
     {
         template<typename resolvertype, typename ...argtypes>
             static simple_tuple<argtypes...> get( resolvertype *resolver )
-            {   
+            {  
+                if( resolver == NULL )
+                {
+                    throw null_argument_exception( __func__, "resolver" );
+                }
+
                 simple_tuple<argtypes...> result;
                 try
                 {

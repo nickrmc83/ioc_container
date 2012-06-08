@@ -10,6 +10,40 @@
 #ifndef TEMPLATE_HELPERS_H
 #define TEMPLATE_HELPERS_H
 
+class null_argument_exception : public std::exception
+{
+    private:
+        std::string function_name;
+        std::string argument_name;
+    
+    public:
+        null_argument_exception( const std::string &function,
+                const std::string &argument )
+            : function_name( function ), 
+            argument_name( argument )
+        {
+        }
+
+        const std::string &get_function_name() const
+        {
+            return function_name;
+        }
+
+        const std::string &get_argument_name() const
+        {
+            return argument_name;
+        }
+
+        const char *what() const throw()
+        {
+            std::string result = std::string( "Argument " ) +
+                argument_name + 
+                std::string( " was null in function " ) +
+                function_name;
+            return result.c_str();
+        }
+};
+
 template<typename T>
 struct template_helper
 {
