@@ -13,51 +13,51 @@
 template<typename T>
 struct template_helper
 {
-	template<typename ...argtypes>
-	static T default_value( argtypes ...args )
-	{
-		// This will be compiled out during optimisation.
-		return T( args... );
-	}
+    template<typename ...argtypes>
+        static T default_value( argtypes ...args )
+        {
+            // This will be compiled out during optimisation.
+            return T( args... );
+        }
 
-	template<typename ...argtypes>
-	static T default_new( argtypes ...args )
-	{
-		// This will be compiled out during optimisation.
-		return template_helper::default_value( args... );
-	}
+    template<typename ...argtypes>
+        static T default_new( argtypes ...args )
+        {
+            // This will be compiled out during optimisation.
+            return template_helper::default_value( args... );
+        }
 
-	static void destruct( T object )
-	{
-		// This is a reference type so do not do anything.
-		// This will be compiled out during optimisation.
-	}
+    static void destruct( T object )
+    {
+        // This is a reference type so do not do anything.
+        // This will be compiled out during optimisation.
+    }
 };
 
 template<typename T>
 struct template_helper<T *>
 {
     template<typename ...argtypes>
-	static T *default_value()
-	{
-		return NULL;
-	}
+        static T *default_value()
+        {
+            return NULL;
+        }
 
-	template<typename ...argtypes>
-	static T *default_new( argtypes ...args )
-	{
-		// This will be compiled out during optimisation.
-		return new T( args... );
-	}
+    template<typename ...argtypes>
+        static T *default_new( argtypes ...args )
+        {
+            // This will be compiled out during optimisation.
+            return new T( args... );
+        }
 
-	static void destruct( T *object )
-	{
-		// This is a pointer type so delete if not NULL
-		if( object )
-		{
-			delete object;
-			object = NULL;
-		}
-	}
+    static void destruct( T *object )
+    {
+        // This is a pointer type so delete if not NULL
+        if( object )
+        {
+            delete object;
+            object = NULL;
+        }
+    }
 };
 #endif //TEMPLATE_HELPERS_H
