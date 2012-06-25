@@ -122,7 +122,7 @@ namespace ioc
                     // This should get optimised out.
                 }
         };
-    
+
     struct tuple_value_resolver
     {
         template<typename resolvertype, typename ...argtypes>
