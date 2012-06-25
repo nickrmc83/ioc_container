@@ -1,4 +1,6 @@
 # standard makefile for unit test project
+# another comment shoudl go here about
+# building for various targets!
 # Compilers
 CXX=clang++
 GXX=g++
