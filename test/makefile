@@ -1,4 +1,11 @@
 # standard makefile for unit test project
+# Usage: g++ users should use the build
+# command:
+#          make gcc
+# while clang users should use:
+#          make clang
+
+
 # Compilers
 CXX=clang++
 GXX=g++
