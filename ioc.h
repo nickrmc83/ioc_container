@@ -21,8 +21,10 @@
 namespace ioc
 {
     // Constant identifiers
-    static const std::string ioc_type_name_registration = "IOC Container";
-    static const std::string unnamed_type_name_registration = "Unnamed registration";
+    static const std::string 
+        ioc_type_name_registration = "IOC Container";
+    static const std::string 
+        unnamed_type_name_registration = "Unnamed registration";
 
     // pre-declaration to satisfy factory types
     class container;
@@ -93,22 +95,29 @@ namespace ioc
                 {
                     typedef typename tupletype::value_type thistype; 
                     // Resolve factory. We need to do this so we can ascertain
-                    // if we can manually clear up items in case of an exception.
-                    // For example, if we register an instance type then we cannot
-                    // automatically destruct this value. However if the resolver
-                    // has new'd an object then we can destruct it.
+                    // if we can manually clear up items in case of an 
+                    // exception.
+                    
+                    // For example, if we register an instance type then we 
+                    // cannot automatically destruct this value. 
+                    // However if the resolver has new'd an object then we can 
+                    // destruct it.
                     bool destructable = false;
-                    thistype value = template_helper<thistype>::default_value();
-                    const ifactory *factory = resolver->template resolve_factory<thistype>();
+                    thistype value = 
+                        template_helper<thistype>::default_value();
+                    const ifactory *factory = 
+                        resolver->template resolve_factory<thistype>();
                     if( factory )
                     {
                         destructable = factory->is_destructable();
-                        value = reinterpret_cast<thistype>( factory->create_item() );
+                        value = reinterpret_cast<thistype>( 
+                                    factory->create_item() );
                     }
                     // Now create object type wrapper and assign it to our tuple
                     tuple.set_value( value );
                     tuple.set_clearable_value( destructable );
-                    tuple_value_resolver_impl<index - 1>::set( resolver, tuple.next() );
+                    tuple_value_resolver_impl<index - 1>::
+                        set( resolver, tuple.next() );
                 }
         };
 
@@ -137,7 +146,8 @@ namespace ioc
                 simple_tuple<argtypes...> result;
                 try
                 {
-                    tuple_value_resolver_impl<sizeof...(argtypes)>::set( resolver, result );
+                    tuple_value_resolver_impl<sizeof...(argtypes)>::
+                        set( resolver, result );
                 }
                 catch( const std::exception &e )
                 {
@@ -172,7 +182,8 @@ namespace ioc
                 // already resolved objects for us.
                 I result = template_helper<I>::default_value();
                 this_tuple_type args = 
-                    tuple_value_resolver::get<ioc::container, argtypes...>( container_obj );
+                    tuple_value_resolver::
+                    get<ioc::container, argtypes...>( container_obj );
                 try
                 {
                     result = tuple_helper::call( callable_obj, args );
@@ -218,8 +229,11 @@ namespace ioc
                 }
 
             public:
-                resolvable_factory( const std::string &name_in, ioc::container *container_in )
-                    : delegate_factory<I, T (*)( argtypes... ), argtypes...>( name_in, container_in, resolvable_factory::creator )
+                resolvable_factory( 
+                        const std::string &name_in, 
+                        ioc::container *container_in )
+                    : delegate_factory<I, T (*)( argtypes... ), argtypes...>
+                      ( name_in, container_in, resolvable_factory::creator )
                 {
                 }
 
@@ -287,8 +301,10 @@ namespace ioc
 
             const char *what() const throw()
             {
-                std::string error = std::string( "Previous registration of type (Type: " ) +
-                    type_name + std::string( " , " ) + registration_name + std::string( ")" );
+                std::string error = 
+                    std::string( "Previous registration of type (Type: " ) +
+                    type_name + std::string( " , " ) + registration_name + 
+                    std::string( ")" );
                 return error.c_str(); 
             }
     };
@@ -317,13 +333,15 @@ namespace ioc
                 // Register Container so it can be resolved into
                 // objects for delayed resolution later after
                 // construction
-                register_instance_with_name<ioc::container *>( ioc_type_name_registration, this );
+                register_instance_with_name<ioc::container *>( 
+                        ioc_type_name_registration, this );
             }
 
             ~container()
             {
                 // Destroy all factories
-                for( std::vector<ifactory *>::const_iterator i = types.begin(); i != types.end(); ++i )
+                for( std::vector<ifactory *>::const_iterator i = types.begin();
+                       i != types.end(); ++i )
                 {
                     destroy_factory( *i );
                 }
@@ -354,66 +372,78 @@ namespace ioc
             template<typename I>
                 bool type_is_registered() const
                 {
-                    return type_is_registered<I>( unnamed_type_name_registration );
+                    return type_is_registered<I>( 
+                            unnamed_type_name_registration );
                 }
 
             // Registration helper
             template<typename F, typename I, typename ...argtypes>
-                void register_with_name_template( const std::string &name_in, argtypes... args )
+                void register_with_name_template( const std::string &name_in,
+                        argtypes... args )
                 {
                     if( type_is_registered<I>( name_in ) )
                     {
                         // Throw an exception as we cannot register a type
                         // which has already been registered
-                        throw registration_exception( typeid(I).name(), name_in );
+                        throw registration_exception( typeid(I).name(), 
+                                name_in );
                     }
                     F *new_factory = new F( name_in, args... );
                     types.push_back( new_factory );
                 }
 
             template<typename I, typename callable, typename ...argtypes>
-                void register_delegate_with_name( const std::string &name_in, callable call_obj )
+                void register_delegate_with_name( const std::string &name_in,
+                        callable call_obj )
                 {
                     // Create a functor which returns an Interface type
                     // but actually news a Concretion.
-                    typedef delegate_factory<I, callable, argtypes...> factorytype;
-                    register_with_name_template<factorytype, I, ioc::container *, callable>( name_in, this, call_obj );
+                    typedef delegate_factory<I, callable, argtypes...> 
+                        factorytype;
+                    register_with_name_template<factorytype, I,
+                        ioc::container *, callable>( name_in, this, call_obj );
                 }
 
             template<typename I, typename callable, typename ...argtypes>
                 void register_delegate( callable call_obj )
                 {
                     // Register nameless delegate constructor
-                    register_delegate_with_name<I, callable, argtypes...>( unnamed_type_name_registration, call_obj );
+                    register_delegate_with_name<I, callable, argtypes...>( 
+                            unnamed_type_name_registration, call_obj );
                 }
 
             template<typename I, typename T, typename ...argtypes>
                 void register_type_with_name( const std::string &name_in )
                 {
                     typedef resolvable_factory<I, T, argtypes...> factorytype;
-                    register_with_name_template<factorytype, I, ioc::container *>( name_in, this );
+                    register_with_name_template<factorytype, I, 
+                        ioc::container *>( name_in, this );
                 }
 
             template<typename I, typename T, typename ...argtypes>
                 void register_type()
                 {
                     // Register nameless constructor object
-                    register_type_with_name<I, T, argtypes...>( unnamed_type_name_registration );
+                    register_type_with_name<I, T, argtypes...>( 
+                            unnamed_type_name_registration );
                 }
 
             template<typename I>
-                void register_instance_with_name( const std::string &name_in, I instance_in )
+                void register_instance_with_name( const std::string &name_in,
+                        I instance_in )
                 {
                     // Create instance constuctor and register in our type list
                     typedef instance_factory<I> factorytype;
-                    register_with_name_template<factorytype, I, I>( name_in, instance_in ); 
+                    register_with_name_template<factorytype, I, I>( name_in, 
+                            instance_in ); 
                 }
 
 
             template<typename I>
                 void register_instance( I instance_in )
                 {
-                    register_instance_with_name<I>( unnamed_type_name_registration, instance_in );
+                    register_instance_with_name<I>( 
+                            unnamed_type_name_registration, instance_in );
                 }
 
             // Resolve factory for interface. If that fails then return NULL.
@@ -452,7 +482,8 @@ namespace ioc
             // Resolve factory for interface type by name. 
             // If that fails then return NULL.
             template<typename I>
-                ifactory *resolve_factory_by_name( const std::string &name_in ) const
+                ifactory *
+                resolve_factory_by_name( const std::string &name_in ) const
                 {
                     // Lookup interface type. If it cannot be found return
                     // the default for that type.
@@ -475,7 +506,8 @@ namespace ioc
                 I resolve_by_name( const std::string &name_in ) const
                 {
                     I result = template_helper<I>::default_value();
-                    const ifactory *factory = resolve_factory_by_name<I>( name_in );
+                    const ifactory *factory = 
+                        resolve_factory_by_name<I>( name_in );
                     if( factory )
                     {
                         result = reinterpret_cast<I>( factory->create_item() );
