@@ -155,10 +155,11 @@ struct tuple_helper_impl
                 functiontype func,
                 const tupletype &tuple,
                 argtypes ...args )
-        -> decltype( tuple_helper_impl<index-1>::call( func, tuple.next_ref(), args..., tuple.get_value() ) )
+        -> decltype( tuple_helper_impl<index-1>::
+                call( func, tuple.next_ref(), args..., tuple.get_value() ) )
         {
-            return tuple_helper_impl<index - 1>::call( func, tuple.next_ref(), args...,
-                    tuple.get_value() );
+            return tuple_helper_impl<index - 1>::
+                call( func, tuple.next_ref(), args..., tuple.get_value() );
         }
 
     template<typename functiontype, typename tupletype, typename ...argtypes>
@@ -166,10 +167,17 @@ struct tuple_helper_impl
                 functiontype func,
                 const tupletype &tuple,
                 const argtypes &...args )
-        -> decltype( tuple_helper_impl<index-1>::call_ref( func, tuple.next_ref(), args..., tuple.get_value_ref() ) )
+        -> decltype( tuple_helper_impl<index-1>::
+                call_ref( func, 
+                    tuple.next_ref(), 
+                    args..., 
+                    tuple.get_value_ref() ) )
         {
-            return tuple_helper_impl<index - 1>::call_ref( func, tuple.next_ref(), args...,
-                    tuple.get_value_ref() );
+            return tuple_helper_impl<index - 1>::
+                call_ref( func, 
+                        tuple.next_ref(), 
+                        args...,
+                        tuple.get_value_ref() );
         }
 };
 
@@ -211,16 +219,20 @@ struct tuple_helper
 {
     template<typename functiontype, typename tupletype>
         static auto call( functiontype func, const tupletype &tuple )
-        -> decltype( tuple_helper_impl<tupletype::tuple_count>::template call<functiontype, tupletype>( func, tuple ) )
+        -> decltype( tuple_helper_impl<tupletype::tuple_count>::
+                template call<functiontype, tupletype>( func, tuple ) )
         {
-            return tuple_helper_impl<tupletype::tuple_count>::template call<functiontype, tupletype>( func, tuple );
+            return tuple_helper_impl<tupletype::tuple_count>::
+                template call<functiontype, tupletype>( func, tuple );
         }
 
     template<typename functiontype, typename tupletype>
         static auto CallRef( functiontype func, const tupletype &tuple )
-        -> decltype( tuple_helper_impl<tupletype::tuple_count>::template call_ref<functiontype, tupletype>( func, tuple ) )
+        -> decltype( tuple_helper_impl<tupletype::tuple_count>::
+                template call_ref<functiontype, tupletype>( func, tuple ) )
         {
-            return tuple_helper_impl<tupletype::tuple_count>::template call_ref<functiontype, tupletype>( func, tuple );
+            return tuple_helper_impl<tupletype::tuple_count>::
+                template call_ref<functiontype, tupletype>( func, tuple );
         }
 };
 
