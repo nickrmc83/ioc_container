@@ -340,8 +340,8 @@ namespace ioc
             ~container()
             {
                 // Destroy all factories
-                for( std::vector<ifactory *>::const_iterator i = types.begin();
-                       i != types.end(); ++i )
+                for( std::vector<ifactory *>::const_iterator i = types.rbegin();
+                       i != types.rend(); ++i )
                 {
                     destroy_factory( *i );
                 }
