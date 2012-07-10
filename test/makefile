@@ -20,7 +20,7 @@ CFLAGS=-std=c++0x -Wall -g -O0
 CPP=main.cpp
 
 # Output name
-OUTPUT=TestApp
+OUTPUT=test_app
 
 # Linux uses clang 3.0
 clang:
