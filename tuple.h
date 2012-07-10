@@ -9,8 +9,10 @@
 #ifndef TUPLE_H
 #define TUPLE_H
 
-#include <ioc_container/template_helpers.h>
+#include <template_helpers.h>
 #include <exception>
+#include <memory>
+#include <tuple>
 
 template<typename ...argtypes>
 class simple_tuple;
@@ -215,6 +217,43 @@ struct tuple_helper_impl<0>
         }
 };
 
+struct tuple_clearer_impl
+{
+    template<typename ...argtypes>
+        static void clear( std::tuple<std::pair<argtypes..., bool>> &item )
+        {
+            if( item.second == true )
+            {
+                template_helper<argtypes...>::destruct( item.first );
+                item.second = false;
+            }
+        }
+};
+
+template<size_t index>
+struct tuple_clearer
+{
+    template<typename ...argtypes>
+        static void clear( std::tuple<std::pair<argtypes..., bool>> &item )
+        {
+            // clear tuple value
+            tuple_clearer_impl::clear<argtypes...>( item );
+            // recurse down
+            tuple_clearer<index -1>::clear( std::get<1>( item ) );
+        }
+};
+
+template<>
+struct tuple_clearer<0>
+{
+    template<typename objtype>
+        static void clear( std::tuple<std::pair<objtype, bool>> &item )
+        {
+            // clear tuple value
+            tuple_clearer_impl::clear<objtype>( item );
+        }
+};
+
 struct tuple_helper
 {
     template<typename functiontype, typename tupletype>
@@ -227,7 +266,7 @@ struct tuple_helper
         }
 
     template<typename functiontype, typename tupletype>
-        static auto CallRef( functiontype func, const tupletype &tuple )
+        static auto call_ref( functiontype func, const tupletype &tuple )
         -> decltype( tuple_helper_impl<tupletype::tuple_count>::
                 template call_ref<functiontype, tupletype>( func, tuple ) )
         {
