@@ -15,8 +15,8 @@
 #include <typeinfo>
 #include <vector>
 #include <string>
-#include <ioc_container/tuple.h>
-#include <ioc_container/template_helpers.h>
+#include <tuple.h>
+#include <template_helpers.h>
 
 namespace ioc
 {
