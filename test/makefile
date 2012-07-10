@@ -10,7 +10,8 @@ CXX=clang++
 GXX=g++
 
 # Generic includes
-INCLUDES=-I../..
+INCLUDES=-I../.. \
+		 -I../.
 		 
 # Generic flags
 CFLAGS=-std=c++0x -Wall -g -O0 
