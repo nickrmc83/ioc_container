@@ -7,7 +7,7 @@
 
 # Compilers
 CXX=clang++
-GXX=g++
+GXX=g++ # g++-4.7 # name of installed 4.7 version on Ubuntu
 
 # Generic includes
 INCLUDES=-I../.. \
