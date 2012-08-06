@@ -17,7 +17,7 @@
 enum TestStatus
 {
     TS_Success = 0,
-	TS_Unknown,
+    TS_Unknown,
     TS_Registration_Error,
     TS_Unknown_Registration,
     TS_Resolution_Error
@@ -25,12 +25,12 @@ enum TestStatus
 
 static inline bool TestSucceeded( TestStatus Status )
 {
-	return Status == TS_Success;
+    return Status == TS_Success;
 }
 
 static inline bool TestFailed( TestStatus Status )
 {
-	return !TestSucceeded( Status );
+    return !TestSucceeded( Status );
 }
 
 // Test function signature
@@ -43,10 +43,10 @@ class TestFunctionObject
         TestFuncSignature Func;
     public:
         TestFunctionObject( const std::string &TestName, 
-            TestFuncSignature FuncIn ) :
+                TestFuncSignature FuncIn ) :
             Name( TestName ), Func( FuncIn )
-        {
-        }
+    {
+    }
 
         const std::string &GetName() const
         {
@@ -107,10 +107,10 @@ struct InterfaceType
     {
     }
 
-	virtual bool Success() const
-	{
-		return false;
-	}
+    virtual bool Success() const
+    {
+        return false;
+    }
 };
 
 // Generic concretion for use in testing
@@ -126,18 +126,18 @@ struct Concretion : public InterfaceType
         DestructedCount++;
     }
 
-	bool Success() const
-	{
-		return true;
-	}
+    bool Success() const
+    {
+        return true;
+    }
 };
 
 struct ComplexConcretion : public Concretion
 {
     Concretion *InnerInstance;
-    
+
     ComplexConcretion( Concretion *Instance )
-    : InnerInstance( Instance )
+        : InnerInstance( Instance )
     {
     }
 };
@@ -166,7 +166,7 @@ static TestStatus TestConstructor()
     {
         Container = new ioc::container();
         Result = TS_Success;
-        
+
         // Delete the container
         delete Container;
         Container = NULL;
@@ -215,7 +215,7 @@ static TestStatus TestRegister()
     {
         PrintException( __func__, e );
     } 
-    
+
     return Result;
 }
 
@@ -352,7 +352,7 @@ static TestStatus TestRegisterTypeMoreThanOnce()
     {
         PrintException( __func__, e );
     }
-    
+
     return Result;
 }
 
@@ -407,35 +407,35 @@ static TestStatus TestRegisterMoreThanOneTypeWithTheSameName()
 // constructor of a complex type.
 static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
 {
-	TestStatus Result = TS_Registration_Error;
-	ioc::container Container;
-	try
-	{
-		Container.register_type<InterfaceType *, Concretion *>();
-		Container.register_type<ThrowingConcretion *, ThrowingConcretion *, InterfaceType *>();
-		// We expect to catch an error but the constructor variables for
-		// Throwing concretion to have been deleted.
-		try
-		{
-			Container.resolve<ThrowingConcretion *>();
-		}
-		catch(const std::exception &e)
-		{
-			PrintException( __func__, e );
-		}
-		// We expect a single concretion
-		if( ( ConstructedCount == 1 ) && ( DestructedCount == 1 ) )
-		{
-			std::cout << "Constructed " << ConstructedCount << 
-				", Destructed " << DestructedCount << std::endl;
-			Result = TS_Success;
-		}
-	}
-	catch( const std::exception &e )
-	{
-		PrintException( __func__, e );
-	}
-	return Result;
+    TestStatus Result = TS_Registration_Error;
+    ioc::container Container;
+    try
+    {
+        Container.register_type<InterfaceType *, Concretion *>();
+        Container.register_type<ThrowingConcretion *, ThrowingConcretion *, InterfaceType *>();
+        // We expect to catch an error but the constructor variables for
+        // Throwing concretion to have been deleted.
+        try
+        {
+            Container.resolve<ThrowingConcretion *>();
+        }
+        catch(const std::exception &e)
+        {
+            PrintException( __func__, e );
+        }
+        // We expect a single concretion
+        if( ( ConstructedCount == 1 ) && ( DestructedCount == 1 ) )
+        {
+            std::cout << "Constructed " << ConstructedCount << 
+                ", Destructed " << DestructedCount << std::endl;
+            Result = TS_Success;
+        }
+    }
+    catch( const std::exception &e )
+    {
+        PrintException( __func__, e );
+    }
+    return Result;
 }
 
 // Helper macro for registering tests with a name.
@@ -445,7 +445,7 @@ static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
 static std::vector<TestFunctionObject> GetRegisteredTests()
 {
     std::vector<TestFunctionObject> Result;
-	REGISTER_TEST( Result, TestConstructor );
+    REGISTER_TEST( Result, TestConstructor );
     REGISTER_TEST( Result, TestDestructor );
     REGISTER_TEST( Result, TestRegister );
     REGISTER_TEST( Result, TestTypeIsRegistered );
@@ -455,7 +455,7 @@ static std::vector<TestFunctionObject> GetRegisteredTests()
     REGISTER_TEST( Result, TestRegisterTypeMoreThanOnce );
     REGISTER_TEST( Result, TestRegisterTypeWithNameMoreThanOnce );
     REGISTER_TEST( Result, TestRegisterMoreThanOneTypeWithTheSameName );
-	REGISTER_TEST( Result, TestResolveComplexTypeClearsUpConstructedTypesOnError );
+    REGISTER_TEST( Result, TestResolveComplexTypeClearsUpConstructedTypesOnError );
     return Result;
 }
 #undef REGISTER_TEST
@@ -463,9 +463,9 @@ static std::vector<TestFunctionObject> GetRegisteredTests()
 // Execute given test
 static int ExecuteTests( const std::vector<TestFunctionObject> &Tests )
 {
-     // Global status counters    
-	size_t SuccessCount = 0;
-	size_t FailureCount = 0;
+    // Global status counters    
+    size_t SuccessCount = 0;
+    size_t FailureCount = 0;
 
     for( std::vector<TestFunctionObject>::const_iterator i = Tests.begin();
             i != Tests.end(); ++i )
@@ -473,42 +473,42 @@ static int ExecuteTests( const std::vector<TestFunctionObject> &Tests )
         // Print test separator pattern
         std::cout << "???????????????????????????????????????????" << std::endl;
         PrintTestStart( *i );
-		TestStatus Result = TS_Unknown; 
-		
-		// Reinit global variables for each test
-		ResetCounters();
-		try
-		{
-			// Execute test function
-			Result = (*i).Execute();
-		}
-		catch( const std::exception &e )
-		{
-			PrintException( __func__, e );
-		}
-		
-		// Check for success
-		if( TestSucceeded( Result ) )
-		{
-			SuccessCount++;
+        TestStatus Result = TS_Unknown; 
+
+        // Reinit global variables for each test
+        ResetCounters();
+        try
+        {
+            // Execute test function
+            Result = (*i).Execute();
+        }
+        catch( const std::exception &e )
+        {
+            PrintException( __func__, e );
+        }
+
+        // Check for success
+        if( TestSucceeded( Result ) )
+        {
+            SuccessCount++;
             PrintTestSuccess( *i );
-		}
-		else
-		{
-			FailureCount++;
+        }
+        else
+        {
+            FailureCount++;
             PrintTestFailure( *i );
-		}
-        
+        }
+
         // newline for readability
         std::cout << std::endl;
 
     }
 
     // Print final results to the screen
-	std::cout << "*******************************************" << std::endl;
-	std::cout << "Final test run results: Success " << 
-		SuccessCount << ", Failure " << FailureCount << std::endl;
-    
+    std::cout << "*******************************************" << std::endl;
+    std::cout << "Final test run results: Success " << 
+        SuccessCount << ", Failure " << FailureCount << std::endl;
+
     // A single failure constitutes an overall failure
     return FailureCount;
 }
@@ -524,15 +524,15 @@ int main( int argc, char **argv )
     }
 
     std::cout << std::endl;
-	
+
     // Register functions for test
     std::cout << "Obtaining registered tests" << std::endl << std::endl;
-	std::vector<TestFunctionObject> TestFunctions = GetRegisteredTests();
-    
+    std::vector<TestFunctionObject> TestFunctions = GetRegisteredTests();
+
     // Execute tests
     std::cout << "Executing registered tests" << std::endl << std::endl;;
     int Result = ExecuteTests( TestFunctions );	
 
-	// Success is no errors
+    // Success is no errors
     return Result;
 }	
