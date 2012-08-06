@@ -26,6 +26,35 @@ namespace ioc
     static const std::string 
         unnamed_type_name_registration = "Unnamed registration";
 
+    // Generic decoration
+    template<typename T, typename D>
+        struct decorated_type
+        {
+            T value;
+            D decoration;
+
+            decorated_type( T valIn, D decorationIn )
+                : value( valIn ), decoration( decorationIn )
+            {
+            }
+
+            D get_decoration() const
+            {
+                return value;
+            }
+
+
+        };
+    // Boolean decorated generic type
+    template<typename T, bool bool_decorator = false>
+        struct bool_decorated_type : decorated_type<T, bool>
+        {
+            bool_decorated_type( T val )
+                : decorated_type<T>(val, bool_decorator)
+            {
+            }
+        };
+
     // pre-declaration to satisfy factory types
     class container;
 
