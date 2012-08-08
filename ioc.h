@@ -16,6 +16,7 @@
 #include <vector>
 #include <string>
 #include <tuple.h>
+//#include <tuple>
 #include <template_helpers.h>
 
 namespace ioc
@@ -28,32 +29,59 @@ namespace ioc
 
     // Generic decoration
     template<typename T, typename D>
-        struct decorated_type
+        class decorated_type
         {
-            T value;
-            D decoration;
+            private:
+                typedef T value_type;
+                typedef D decoration_type;
+                T value;
+                D decoration;
 
-            decorated_type( T valIn, D decorationIn )
-                : value( valIn ), decoration( decorationIn )
-            {
-            }
+            public:
+                decorated_type( T valIn, D decorationIn )
+                    : value( valIn ), decoration( decorationIn )
+                {
+                }
 
-            D get_decoration() const
-            {
-                return value;
-            }
+                decorated_type( D decorationIn )
+                    : decoration( decorationIn )
+                {
+                    value = template_helper<T>::default_value();
+                    // TODO: Default value to using
+                    // tuple_helper::default<T>();
+                }
 
+                T &get_value() const
+                {
+                    return value;
+                }
+
+                D get_decoration() const
+                {
+                    return value;
+                }
+
+                T &operator = ( const T &valueIn )
+                {
+                    value = valueIn;
+                }
+
+                bool operator == ( const T &valueIn ) const
+                {
+                    return value == valueIn;
+                }
 
         };
     // Boolean decorated generic type
     template<typename T, bool bool_decorator = false>
-        struct bool_decorated_type : decorated_type<T, bool>
-        {
+        class bool_decorated_type : public decorated_type<T, bool>
+    {
+        public:
             bool_decorated_type( T val )
-                : decorated_type<T>(val, bool_decorator)
+                : decorated_type<T, bool>(val, bool_decorator)
             {
             }
-        };
+    };
 
     // pre-declaration to satisfy factory types
     class container;
@@ -122,11 +150,11 @@ namespace ioc
                 static void set( resolvertype *resolver,
                         tupletype &tuple )
                 {
-                    typedef typename tupletype::value_type thistype; 
+                    typedef typename tupletype::value_type thistype;
                     // Resolve factory. We need to do this so we can ascertain
                     // if we can manually clear up items in case of an 
                     // exception.
-                    
+
                     // For example, if we register an instance type then we 
                     // cannot automatically destruct this value. 
                     // However if the resolver has new'd an object then we can 
@@ -140,7 +168,7 @@ namespace ioc
                     {
                         destructable = factory->is_destructable();
                         value = reinterpret_cast<thistype>( 
-                                    factory->create_item() );
+                                factory->create_item() );
                     }
                     // Now create object type wrapper and assign it to our tuple
                     tuple.set_value( value );
@@ -172,11 +200,11 @@ namespace ioc
                     throw null_argument_exception( __func__, "resolver" );
                 }
 
+                //std::tuple<argtypes...> result;
                 simple_tuple<argtypes...> result;
                 try
                 {
-                    tuple_value_resolver_impl<sizeof...(argtypes)>::
-                        set( resolver, result );
+                    tuple_value_resolver_impl<sizeof...(argtypes)>::set( resolver, result );
                 }
                 catch( const std::exception &e )
                 {
@@ -263,8 +291,8 @@ namespace ioc
                         ioc::container *container_in )
                     : delegate_factory<I, T (*)( argtypes... ), argtypes...>
                       ( name_in, container_in, resolvable_factory::creator )
-                {
-                }
+            {
+            }
 
                 ~resolvable_factory()
                 {
@@ -370,7 +398,7 @@ namespace ioc
             {
                 // Destroy all factories
                 for( std::vector<ifactory *>::reverse_iterator i = types.rbegin();
-                       i != types.rend(); ++i )
+                        i != types.rend(); ++i )
                 {
                     destroy_factory( *i );
                 }
