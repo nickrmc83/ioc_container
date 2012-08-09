@@ -513,44 +513,6 @@ static int ExecuteTests( const std::vector<TestFunctionObject> &Tests )
     return FailureCount;
 }
 
-
-// TODO remove this debuggin stuff
-#include <tuple_helper.h>
-static int debug_func( int a, char b )
-{
-    std::cout << "A) " 
-        << a << 
-        " B) " << b 
-        << std::endl;
-    return 10;
-}
-
-static void TestTupleUnwrap()
-{
-    std::tuple<int, char> myTuple( 10, 'b' );
-    int result = tuple_unwrap::call( debug_func, myTuple );
-    std::cout << "And the result was: " << result << std::endl; 
-}
-
-static void TestTupleResolve()
-{
-    ioc::container Container;
-    Container.register_type_with_name<InterfaceType *, Concretion *>( "ThisName" );
-    std::tuple<InterfaceType *> someTuple;
-    tuple_resolve::resolve( Container, someTuple );
-
-    InterfaceType *i = std::get<0>(someTuple);
-    if( i )
-    {
-        std::cout << "interface is not null" << std::endl; 
-    }
-    else
-    {
-        std::cout << "interface is null" << std::endl;
-    }
-}
-// end of TODO
-
 // Execute methods
 int main( int argc, char **argv )
 {
