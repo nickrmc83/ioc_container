@@ -531,12 +531,31 @@ static void TestTupleUnwrap()
     int result = tuple_unwrap::call( debug_func, myTuple );
     std::cout << "And the result was: " << result << std::endl; 
 }
+
+static void TestTupleResolve()
+{
+    ioc::container Container;
+    Container.register_type_with_name<InterfaceType *, Concretion *>( "ThisName" );
+    std::tuple<InterfaceType *> someTuple;
+    tuple_resolve::resolve( Container, someTuple );
+
+    InterfaceType *i = std::get<0>(someTuple);
+    if( i )
+    {
+        std::cout << "interface is not null" << std::endl; 
+    }
+    else
+    {
+        std::cout << "interface is null" << std::endl;
+    }
+}
 // end of TODO
 
 // Execute methods
 int main( int argc, char **argv )
 {
     TestTupleUnwrap();
+    TestTupleResolve();
 
     // Print commandline variables to std::out
     std::cout << "This application was executed with the following arguments" << std::endl;

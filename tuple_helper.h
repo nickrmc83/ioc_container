@@ -66,7 +66,7 @@ struct tuple_resolve_impl<0>
     template<typename resolver_type, typename tuple_type>
     static void resolve( resolver_type &resolver, tuple_type &tuple )
     {
-        typedef std::tuple_element<0, tuple_type>::type this_type;
+        typedef typename std::tuple_element<0, tuple_type>::type this_type;
         this_type &val = std::get<0>( tuple );
         val = resolver.resolve<this_type>();
     }
@@ -78,9 +78,18 @@ struct tuple_resolve_impl
     template<typename resolver_type, typename tuple_type>
         static void resolve( resolver_type &resolver, tuple_type &tuple )
         {
-            typedef std::tuple_element<index, tuple_type>::type this_type;
+            typedef typename std::tuple_element<index, tuple_type>::type this_type;
             this_type &val = std::get<index>( tuple );
             val = resolver.resolve<this_type>();
             tuple_resolve_impl<index-1>::resolve( resolver, tuple );
+        }
+};
+
+struct tuple_resolve
+{
+    template<typename resolver_type, typename ...arg_types>
+        static void resolve( resolver_type &resolver, std::tuple<arg_types...> &tuple )
+        {
+            tuple_resolve_impl<sizeof...(arg_types) - 1>::resolve( resolver, tuple );
         }
 };
