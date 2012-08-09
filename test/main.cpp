@@ -501,7 +501,6 @@ static int ExecuteTests( const std::vector<TestFunctionObject> &Tests )
 
         // newline for readability
         std::cout << std::endl;
-
     }
 
     // Print final results to the screen
@@ -516,9 +515,6 @@ static int ExecuteTests( const std::vector<TestFunctionObject> &Tests )
 // Execute methods
 int main( int argc, char **argv )
 {
-    TestTupleUnwrap();
-    TestTupleResolve();
-
     // Print commandline variables to std::out
     std::cout << "This application was executed with the following arguments" << std::endl;
     for( int i = 0; i < argc; i++ )

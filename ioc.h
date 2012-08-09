@@ -47,8 +47,6 @@ namespace ioc
                     : decoration( decorationIn )
                 {
                     value = template_helper<T>::default_value();
-                    // TODO: Default value to using
-                    // tuple_helper::default<T>();
                 }
 
                 T &get_value() const
@@ -61,9 +59,15 @@ namespace ioc
                     return value;
                 }
 
-                T &operator = ( const T &valueIn )
+                void set_decoration( D val )
+                {
+                    value = val;
+                }
+
+                decorated_type &operator = ( const T &valueIn )
                 {
                     value = valueIn;
+                    return *this;
                 }
 
                 bool operator == ( const T &valueIn ) const
@@ -413,7 +417,8 @@ namespace ioc
                 {
                     bool result = false;	
                     std::vector<ifactory *>::const_iterator i = types.begin();
-                    while( ( result == false ) && ( i != types.end() ) )
+                    std::vector<ifactory *>::const_iterator end = types.end();
+                    while( ( result == false ) && ( i != end ) )
                     {
                         if( ( (*i)->get_type() == typeid(I) ) &&
                                 ( (*i)->get_name() == name_in ) )
@@ -578,7 +583,8 @@ namespace ioc
                 {
                     bool result = false;
                     std::vector<ifactory *>::iterator i = types.begin();
-                    while( ( result == false ) && ( i != types.end() ) )
+                    std::vector<ifactory *>::iterator end = types.end();
+                    while( ( result == false ) && ( i != end ) )
                     {
                         if( (*i)->get_type() == typeid(I) )
                         {
@@ -598,7 +604,8 @@ namespace ioc
                 {
                     bool result = false;
                     std::vector<ifactory *>::iterator i = types.begin();
-                    while( ( result == false ) && ( i != types.end() ) )
+                    std::vector<ifactory *>::iterator end = types.end();
+                    while( ( result == false ) && ( i != end ) )
                     {
                         if( ( (*i)->get_type() == typeid(I) ) &&
                                 ( (*i)->get_name() == name_in ) )
