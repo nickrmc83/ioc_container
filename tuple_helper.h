@@ -1,5 +1,10 @@
-/// Helper functions for dealing with tuples.
-/// Copyright Nicholas Smith 2012 All right reserved
+/*
+ * tuple_helper.h - Helper functions for dealing with tuples
+ *
+ * Copyright (c) 2012 Nicholas A. Smith (nickrmc83@gmail.com)
+ * Distributed under the Boost software license 1.0, 
+ * see boost.org for a copy.
+ */
 
 #include <tuple>
 #include <stdint.h>
@@ -36,7 +41,7 @@ struct tuple_unwrap_impl
         static auto call( callable_type callable, const tuple_type &tuple, arg_types ...args )
         -> decltype(tuple_unwrap_impl<index - 1>::
                 template call<callable_type, tuple_type, arg_types..., typename std::tuple_element<sizeof...(arg_types), tuple_type>::type>
-            ( callable, tuple, args..., std::get<sizeof...(arg_types)>(tuple) ) )
+                ( callable, tuple, args..., std::get<sizeof...(arg_types)>(tuple) ) )
         {
             typedef typename std::tuple_element<sizeof...(arg_types), tuple_type>::type this_type;
             return tuple_unwrap_impl<index - 1>
@@ -64,12 +69,12 @@ template<>
 struct tuple_resolve_impl<0>
 {
     template<typename resolver_type, typename tuple_type>
-    static void resolve( resolver_type &resolver, tuple_type &tuple )
-    {
-        typedef typename std::tuple_element<0, tuple_type>::type this_type;
-        this_type &val = std::get<0>( tuple );
-        val = resolver.resolve<this_type>();
-    }
+        static void resolve( resolver_type &resolver, tuple_type &tuple )
+        {
+            typedef typename std::tuple_element<0, tuple_type>::type this_type;
+            this_type &val = std::get<0>( tuple );
+            val = resolver.resolve<this_type>();
+        }
 };
 
 template<size_t index>
