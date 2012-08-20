@@ -116,6 +116,10 @@ namespace ioc
                 }
                 catch( const std::exception &e )
                 {
+                    // TODO: Delete any allocated
+                    // objects in our args tuple.
+                    // We must not delete any
+                    // registered instances though.
                     //args.clear();
                     throw;
                 }
@@ -362,7 +366,7 @@ namespace ioc
                     // Create instance constuctor and register in our type list
                     typedef instance_factory<I> factorytype;
                     register_with_name_template<factorytype, I, I>( name_in, 
-                            instance_in ); 
+                            instance_in );
                 }
 
 
