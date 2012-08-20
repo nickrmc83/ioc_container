@@ -17,9 +17,10 @@ template<>
 struct tuple_unwrap_impl<0>
 {
     template<typename callable_type, typename tuple_type, typename ...arg_types>
-        static void call( callable_type callable, tuple_type tuple, arg_types ...args )
+        static auto call( callable_type callable, tuple_type tuple )
+        -> decltype( callable() )
         {
-            static_assert( true, "Can't unwrap an empty tuple" );
+            return callable();
         }
 };
 
@@ -71,6 +72,16 @@ struct tuple_resolve_impl<0>
     template<typename resolver_type, typename tuple_type>
         static void resolve( resolver_type &resolver, tuple_type &tuple )
         {
+            //static_assert( false, "Cannot unwarp an empty tuple" );
+        }
+};
+
+template<>
+struct tuple_resolve_impl<1>
+{
+    template<typename resolver_type, typename tuple_type>
+        static void resolve( resolver_type &resolver, tuple_type &tuple )
+        {
             typedef typename std::tuple_element<0, tuple_type>::type this_type;
             this_type &val = std::get<0>( tuple );
             val = resolver.resolve<this_type>();
@@ -83,8 +94,8 @@ struct tuple_resolve_impl
     template<typename resolver_type, typename tuple_type>
         static void resolve( resolver_type &resolver, tuple_type &tuple )
         {
-            typedef typename std::tuple_element<index, tuple_type>::type this_type;
-            this_type &val = std::get<index>( tuple );
+            typedef typename std::tuple_element<index - 1, tuple_type>::type this_type;
+            this_type &val = std::get<index - 1>( tuple );
             val = resolver.resolve<this_type>();
             tuple_resolve_impl<index-1>::resolve( resolver, tuple );
         }
@@ -95,6 +106,6 @@ struct tuple_resolve
     template<typename resolver_type, typename ...arg_types>
         static void resolve( resolver_type &resolver, std::tuple<arg_types...> &tuple )
         {
-            tuple_resolve_impl<sizeof...(arg_types) - 1>::resolve( resolver, tuple );
+            tuple_resolve_impl<sizeof...(arg_types)>::resolve( resolver, tuple );
         }
 };
