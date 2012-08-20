@@ -27,66 +27,6 @@ namespace ioc
     static const std::string 
         unnamed_type_name_registration = "Unnamed registration";
 
-    // Generic decoration
-    template<typename T, typename D>
-        class decorated_type
-        {
-            private:
-                typedef T value_type;
-                typedef D decoration_type;
-                T value;
-                D decoration;
-
-            public:
-                decorated_type( T valIn, D decorationIn )
-                    : value( valIn ), decoration( decorationIn )
-                {
-                }
-
-                decorated_type( D decorationIn )
-                    : decoration( decorationIn )
-                {
-                    value = template_helper<T>::default_value();
-                }
-
-                T &get_value() const
-                {
-                    return value;
-                }
-
-                D get_decoration() const
-                {
-                    return value;
-                }
-
-                void set_decoration( D val )
-                {
-                    value = val;
-                }
-
-                decorated_type &operator = ( const T &valueIn )
-                {
-                    value = valueIn;
-                    return *this;
-                }
-
-                bool operator == ( const T &valueIn ) const
-                {
-                    return value == valueIn;
-                }
-
-        };
-    // Boolean decorated generic type
-    template<typename T, bool bool_decorator = false>
-        class bool_decorated_type : public decorated_type<T, bool>
-    {
-        public:
-            bool_decorated_type( T val )
-                : decorated_type<T, bool>(val, bool_decorator)
-            {
-            }
-    };
-
     // pre-declaration to satisfy factory types
     class container;
 
@@ -147,81 +87,6 @@ namespace ioc
             }
     };
 
-    template<size_t index>
-        struct tuple_value_resolver_impl
-        {
-            template<typename resolvertype, typename tupletype>
-                static void set( resolvertype *resolver,
-                        tupletype &tuple )
-                {
-                    typedef typename tupletype::value_type thistype;
-                    // Resolve factory. We need to do this so we can ascertain
-                    // if we can manually clear up items in case of an 
-                    // exception.
-
-                    // For example, if we register an instance type then we 
-                    // cannot automatically destruct this value. 
-                    // However if the resolver has new'd an object then we can 
-                    // destruct it.
-                    bool destructable = false;
-                    thistype value = 
-                        template_helper<thistype>::default_value();
-                    const ifactory *factory = 
-                        resolver->template resolve_factory<thistype>();
-                    if( factory )
-                    {
-                        destructable = factory->is_destructable();
-                        value = reinterpret_cast<thistype>( 
-                                factory->create_item() );
-                    }
-                    // Now create object type wrapper and assign it to our tuple
-                    tuple.set_value( value );
-                    tuple.set_clearable_value( destructable );
-                    tuple_value_resolver_impl<index - 1>::
-                        set( resolver, tuple.next() );
-                }
-        };
-
-    template<>
-        struct tuple_value_resolver_impl<0>
-        {
-            template<typename resolvertype, typename tupletype>
-                static void set( resolvertype *resolver,
-                        tupletype &tuple )
-                {
-                    // This should get optimised out.
-                }
-        };
-
-    struct tuple_value_resolver
-    {
-        template<typename resolvertype, typename ...argtypes>
-            static simple_tuple<argtypes...> get( resolvertype *resolver )
-            {
-                // we must have a resolver to continue  
-                if( resolver == NULL )
-                {
-                    throw null_argument_exception( __func__, "resolver" );
-                }
-
-                //std::tuple<argtypes...> result;
-                simple_tuple<argtypes...> result;
-                try
-                {
-                    tuple_value_resolver_impl<sizeof...(argtypes)>::set( resolver, result );
-                }
-                catch( const std::exception &e )
-                {
-                    // Release all pre-allocated values.
-                    result.clear();
-                    throw;
-                }
-                return result;
-            }
-    };
-
-
-
     // DelegateFactory allows delegate objects or routines to be
     // supplied and called for object construction. All delegate
     // arguments are resolved by the resolver before being send
@@ -263,8 +128,8 @@ namespace ioc
                     callable &callable_obj_in )
                 : base_factory<I>( name_in ), container_obj( container_in ), 
                 callable_obj( callable_obj_in )
-            {
-            }
+        {
+        }
 
             ~delegate_factory()
             {
@@ -295,8 +160,8 @@ namespace ioc
                         ioc::container &container_in )
                     : delegate_factory<I, T (*)( argtypes... ), argtypes...>
                       ( name_in, container_in, resolvable_factory::creator )
-                {
-                }
+            {
+            }
 
                 ~resolvable_factory()
                 {
