@@ -18,7 +18,7 @@
 #include <tuple.h>
 //#include <tuple>
 #include <template_helpers.h>
-
+#include <tuple_helper.h>
 namespace ioc
 {
     // Constant identifiers
@@ -230,28 +230,28 @@ namespace ioc
         class delegate_factory : public base_factory<I>
     {
         private:
-            ioc::container *container_obj;
+            ioc::container &container_obj;
             callable callable_obj;
 
             I internal_create_item() const
             {
                 // Resolve delgate arguments
-                typedef simple_tuple<argtypes...> this_tuple_type;
                 // Resolve all variables for construction.
                 // If there is an error during resolution
                 // then the Resolver will de-allocate any
                 // already resolved objects for us.
-                I result = template_helper<I>::default_value();
-                this_tuple_type args = 
-                    tuple_value_resolver::
-                    get<ioc::container, argtypes...>( container_obj );
+                std::tuple<argtypes...> args;
+                I result = template_helper<I>::default_value(); 
                 try
                 {
-                    result = tuple_helper::call( callable_obj, args );
+                    tuple_resolve::resolve
+                        ( container_obj, args );
+                    result = tuple_unwrap::call
+                        ( callable_obj, args );
                 }
                 catch( const std::exception &e )
                 {
-                    args.clear();
+                    //args.clear();
                     throw;
                 }
                 return result;
@@ -259,12 +259,12 @@ namespace ioc
 
         public:
             delegate_factory( const std::string &name_in, 
-                    ioc::container *container_in, const 
+                    ioc::container &container_in, const 
                     callable &callable_obj_in )
                 : base_factory<I>( name_in ), container_obj( container_in ), 
                 callable_obj( callable_obj_in )
-        {
-        }
+            {
+            }
 
             ~delegate_factory()
             {
@@ -292,11 +292,11 @@ namespace ioc
             public:
                 resolvable_factory( 
                         const std::string &name_in, 
-                        ioc::container *container_in )
+                        ioc::container &container_in )
                     : delegate_factory<I, T (*)( argtypes... ), argtypes...>
                       ( name_in, container_in, resolvable_factory::creator )
-            {
-            }
+                {
+                }
 
                 ~resolvable_factory()
                 {
@@ -463,7 +463,7 @@ namespace ioc
                     typedef delegate_factory<I, callable, argtypes...> 
                         factorytype;
                     register_with_name_template<factorytype, I,
-                        ioc::container *, callable>( name_in, this, call_obj );
+                        ioc::container &, callable>( name_in, *this, call_obj );
                 }
 
             template<typename I, typename callable, typename ...argtypes>
@@ -479,7 +479,7 @@ namespace ioc
                 {
                     typedef resolvable_factory<I, T, argtypes...> factorytype;
                     register_with_name_template<factorytype, I, 
-                        ioc::container *>( name_in, this );
+                        ioc::container &>( name_in, *this );
                 }
 
             template<typename I, typename T, typename ...argtypes>
