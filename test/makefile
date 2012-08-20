@@ -22,6 +22,9 @@ CPP=main.cpp
 # Output name
 OUTPUT=test_app
 
+clean:
+	rm -r -f $(OUTPUT)*
+	rm -r -f *~
 # Linux uses clang 3.0
 clang:
 	$(CXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
