@@ -15,8 +15,8 @@
 #include <typeinfo>
 #include <vector>
 #include <string>
-#include <tuple.h>
-//#include <tuple>
+//#include <tuple.h>
+#include <tuple>
 #include <template_helpers.h>
 #include <tuple_helper.h>
 namespace ioc
@@ -46,8 +46,29 @@ namespace ioc
 
             virtual const std::type_info &get_type() const = 0;
             virtual const std::string &get_name() const = 0;
-            virtual void *create_item() const = 0;
+            virtual void* create_item() const = 0;
             virtual bool is_destructable() const = 0;
+    };
+
+    class resolution_attributes
+    {
+        private:
+            bool destructable;
+        public:
+            resolution_attributes()
+                : destructable( false )
+            {
+            }
+
+            resolution_attributes( bool destructable_in )
+                : destructable( destructable_in )
+            {
+            }
+
+            bool is_destructable() const
+            {
+                return destructable;
+            }
     };
 
     // BaseFatory extends ifactory to provide some standard
@@ -106,23 +127,8 @@ namespace ioc
                 // then the Resolver will de-allocate any
                 // already resolved objects for us.
                 std::tuple<argtypes...> args;
-                I result = template_helper<I>::default_value(); 
-                try
-                {
-                    tuple_resolve::resolve
-                        ( container_obj, args );
-                    result = tuple_unwrap::call
-                        ( callable_obj, args );
-                }
-                catch( const std::exception &e )
-                {
-                    // TODO: Delete any allocated
-                    // objects in our args tuple.
-                    // We must not delete any
-                    // registered instances though.
-                    //args.clear();
-                    throw;
-                }
+                tuple_resolve::resolve( container_obj, args );
+                I result = tuple_unwrap::call( callable_obj, args );
                 return result;
             }
 
@@ -394,6 +400,21 @@ namespace ioc
                         i++;
                     }
                     return result;
+                }
+            
+            template<typename I>
+                std::pair<I, resolution_attributes> resolve_with_attributes() const
+                {
+                    I result = template_helper<I>::default_value();
+                    const ifactory *factory = resolve_factory<I>();
+                    if( !factory )
+                    {
+                        // TODO create special exception for this type
+                        throw std::bad_exception();
+                    }
+                    
+                    resolution_attributes attribs( factory->is_destructable() );
+                    return std::pair<I, resolution_attributes>( result, attribs );
                 }
 
             // Resolve interface type. If that fails then return NULL.
