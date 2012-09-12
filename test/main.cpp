@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 #include <stdint.h>
+#include <memory>
 
 
 // Possible status of tests

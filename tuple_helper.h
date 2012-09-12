@@ -9,6 +9,7 @@
 #include <tuple>
 #include <stdint.h>
 #include <exception>
+#include <template_helpers.h>
 
 template<size_t index>
 struct tuple_unwrap_impl;
@@ -96,8 +97,22 @@ struct tuple_resolve_impl
         {
             typedef typename std::tuple_element<index - 1, tuple_type>::type this_type;
             this_type &val = std::get<index - 1>( tuple );
-            val = resolver.resolve<this_type>();
-            tuple_resolve_impl<index-1>::resolve( resolver, tuple );
+            auto resolved_value = resolver.template resolve_with_attributes<this_type>();
+            try
+            {
+                tuple_resolve_impl<index-1>::resolve( resolver, tuple );
+                val = resolved_value.first();
+            }
+            catch( const std::exception &e )
+            {
+                // destroy the reference to our resolved value
+                if( resolved_value.second().is_destructable() )
+                {
+                    template_helper<this_type>::destruct( resolved_value );
+                }
+                // Re throw so higher levels can do the same.
+                throw;
+            }
         }
 };
 
