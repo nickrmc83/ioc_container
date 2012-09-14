@@ -19,6 +19,7 @@
 #include <tuple>
 #include <template_helpers.h>
 #include <tuple_helper.h>
+
 namespace ioc
 {
     // Constant identifiers
@@ -414,6 +415,7 @@ namespace ioc
                     }
                     
                     resolution_attributes attribs( factory->is_destructable() );
+                    result = reinterpret_cast<I>( factory->create_item() );
                     return std::pair<I, resolution_attributes>( result, attribs );
                 }
 

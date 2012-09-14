@@ -148,13 +148,24 @@ struct ComplexConcretion : public Concretion
 // are cleaned-up during a failed resolution.
 struct ThrowingConcretion : public InterfaceType
 {
-    ThrowingConcretion( InterfaceType *SomeInst )
+    ThrowingConcretion()
         : InterfaceType()
     {
+        std:: cout << "Throwing constuctor" << std::endl;
         throw std::bad_exception();
     }
 };
 
+struct CompositeType
+{
+    InterfaceType *Interface;
+    Concretion *Concrete;
+
+    CompositeType( InterfaceType *InterfaceIn, Concretion *ConcreteIn )
+        : Interface( InterfaceIn ), Concrete( ConcreteIn )
+    {
+    }
+};
 
 // The unit tests
 
@@ -412,13 +423,14 @@ static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
     ioc::container Container;
     try
     {
-        Container.register_type<InterfaceType *, Concretion *>();
-        Container.register_type<ThrowingConcretion *, ThrowingConcretion *, InterfaceType *>();
+        Container.register_type<Concretion *, Concretion *>();
+        Container.register_type<InterfaceType *, ThrowingConcretion *>();
+        Container.register_type<CompositeType *, CompositeType *, InterfaceType *, Concretion *>();
         // We expect to catch an error but the constructor variables for
         // Throwing concretion to have been deleted.
         try
         {
-            Container.resolve<ThrowingConcretion *>();
+            Container.resolve<CompositeType *>();
         }
         catch(const std::exception &e)
         {
