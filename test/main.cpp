@@ -528,13 +528,13 @@ static int ExecuteTests( const std::vector<TestFunctionObject> &Tests )
 // Execute methods
 int main( int argc, char **argv )
 {
-    // Print commandline variables to std::out
+   // Print commandline variables to std::out
     std::cout << "This application was executed with the following arguments" << std::endl;
     for( int i = 0; i < argc; i++ )
     {
         std::cout << (i+1) << ") " << argv[i] << std::endl;
     }
-
+    
     std::cout << std::endl;
 
     // Register functions for test

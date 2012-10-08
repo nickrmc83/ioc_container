@@ -17,8 +17,8 @@
 #include <string>
 //#include <tuple.h>
 #include <tuple>
-#include <template_helpers.h>
-#include <tuple_helper.h>
+#include <ioc_container/template_helpers.h>
+#include <ioc_container/tuple_helper.h>
 
 namespace ioc
 {
