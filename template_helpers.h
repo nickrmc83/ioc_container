@@ -24,6 +24,10 @@ class null_argument_exception : public std::exception
         {
         }
 
+        ~null_argument_exception() throw()
+        {
+        }
+
         const std::string &get_function_name() const
         {
             return function_name;

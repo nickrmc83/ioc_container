@@ -223,8 +223,12 @@ namespace ioc
                     const std::string &registration_name_in )
                 : std::exception(), type_name( type_name_in ), 
                 registration_name( registration_name_in )
-        {
-        }
+            {
+            }
+
+            ~registration_exception() throw()
+            {
+            }
 
             const std::string &get_type_name() const
             {
@@ -402,7 +406,7 @@ namespace ioc
                     }
                     return result;
                 }
-            
+
             template<typename I>
                 std::pair<I, resolution_attributes> resolve_with_attributes() const
                 {
@@ -413,7 +417,7 @@ namespace ioc
                         // TODO create special exception for this type
                         throw std::bad_exception();
                     }
-                    
+
                     resolution_attributes attribs( factory->is_destructable() );
                     result = reinterpret_cast<I>( factory->create_item() );
                     return std::pair<I, resolution_attributes>( result, attribs );

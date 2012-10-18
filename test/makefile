@@ -14,7 +14,8 @@ INCLUDES=-I../.. \
 		 -I../.
 		 
 # Generic flags
-CFLAGS=-std=c++0x -Wall -g -O0 
+CFLAGS=-std=c++0x -Wall -g -O0
+COV_FLAGS=-fprofile-arcs -ftest-coverage
 
 # Source files
 CPP=main.cpp
@@ -31,3 +32,6 @@ clang:
 # Windows uses g++ 4.7 January 2012
 gcc:
 	$(GXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
+# Code coverage using gcov
+cov:
+	$(GXX) $(INCLUDES) -g $(CPP) $(CFLAGS) $(COV_FLAGS) -o $(OUTPUT)
