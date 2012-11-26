@@ -448,6 +448,136 @@ static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
     {
         PrintException( __func__, e );
     }
+    
+    return Result;
+}
+
+static TestStatus TestResolveFactoryByName()
+{
+    TestStatus Result = TS_Resolution_Error;
+    const std::string registration_name = "TestName";
+    ioc::container container;
+    try
+    {
+        container.register_type_with_name<Concretion *, Concretion *>( registration_name );
+        if( container.resolve_factory_by_name<Concretion *>( registration_name ) != NULL )
+        {
+            Result = TS_Success;
+        }
+    }
+    catch(const std::exception &e)
+    {
+        PrintException( __func__, e );
+    }
+
+    return Result;
+}
+
+static TestStatus TestResolveInterfaceByName()
+{
+    TestStatus Result = TS_Resolution_Error;
+    const std::string registration_name = "TestName";
+    ioc::container container;
+    try
+    {
+        container.register_type_with_name<Concretion *, Concretion *>( registration_name );
+        if( container.resolve_by_name<Concretion *>( registration_name ) != NULL )
+        {
+            Result = TS_Success;
+        }
+    }
+    catch( const std::exception &e )
+    {
+        PrintException( __func__, e );
+    }
+
+    return Result;
+}
+
+static TestStatus TestRemoveRegistration()
+{
+    TestStatus Result = TS_Registration_Error;
+    ioc::container container;
+    try
+    {
+        container.register_type<Concretion *, Concretion *>();
+        if( container.remove_registration<Concretion *>() )
+        {
+            Result = TS_Success;
+        }
+    }
+    catch( const std::exception &e )
+    {
+        PrintException( __func__, e );
+    }
+    return Result;
+}
+
+static TestStatus TestRemoveRegistrationByName()
+{
+    TestStatus Result = TS_Registration_Error;
+    const std::string registration_name = "TestName";
+    ioc::container container;
+    try
+    {
+        container.register_type_with_name <Concretion *, Concretion *>( registration_name );
+        if( container.remove_registration_by_name<Concretion *>( registration_name ) )
+        {
+            Result = TS_Success;
+        }
+    }
+    catch( const std::exception &e )
+    {
+        PrintException( __func__, e );
+    }
+    return Result;
+
+}
+
+// Test delegate for generating a concretion
+static Concretion *CreateConcretion()
+{
+    return new Concretion();
+} 
+
+static TestStatus TestRegisterDelegate()
+{
+    TestStatus Result = TS_Registration_Error;
+    ioc::container container;
+    try
+    {
+        container.register_delegate<Concretion *>( CreateConcretion );
+        if( container.type_is_registered<Concretion *>() )
+        {
+            Result = TS_Success;
+        }
+    }
+    catch( const std::exception &e )
+    {
+        PrintException( __func__, e );
+    }
+    
+    return Result;
+}
+
+static TestStatus TestRegisterDelegateWithName()
+{
+    TestStatus Result = TS_Registration_Error;
+    const std::string registration_name = "TestName"; 
+    ioc::container container;
+    try
+    {
+        container.register_delegate_with_name<Concretion *>( registration_name, CreateConcretion );
+        if( container.type_is_registered<Concretion *>( registration_name ) )
+        {
+            Result = TS_Success;
+        }
+    }
+    catch( const std::exception &e )
+    {
+        PrintException( __func__, e );
+    }
+
     return Result;
 }
 
@@ -469,6 +599,12 @@ static std::vector<TestFunctionObject> GetRegisteredTests()
     REGISTER_TEST( Result, TestRegisterTypeWithNameMoreThanOnce );
     REGISTER_TEST( Result, TestRegisterMoreThanOneTypeWithTheSameName );
     REGISTER_TEST( Result, TestResolveComplexTypeClearsUpConstructedTypesOnError );
+    REGISTER_TEST( Result, TestResolveFactoryByName );
+    REGISTER_TEST( Result, TestResolveInterfaceByName );
+    REGISTER_TEST( Result, TestRemoveRegistration );
+    REGISTER_TEST( Result, TestRemoveRegistrationByName );
+    REGISTER_TEST( Result, TestRegisterDelegate );
+    REGISTER_TEST( Result, TestRegisterDelegateWithName );
     return Result;
 }
 #undef REGISTER_TEST
