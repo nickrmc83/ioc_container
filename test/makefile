@@ -23,10 +23,7 @@ CPP=main.cpp
 # Output name
 OUTPUT=test_app
 
-clean:
-	rm -r -f $(OUTPUT)*
-	rm -r -f *~
-# Linux uses clang 3.0
+# Linux can use clang++ 3.x or g++ 4.7
 clang:
 	$(CXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
 # Windows uses g++ 4.7 January 2012
@@ -35,3 +32,6 @@ gcc:
 # Code coverage using gcov
 cov:
 	$(GXX) $(INCLUDES) -g $(CPP) $(CFLAGS) $(COV_FLAGS) -o $(OUTPUT)
+clean:
+	rm -r -f $(OUTPUT)*
+	rm -r -f *~
