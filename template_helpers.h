@@ -109,10 +109,9 @@ struct template_helper<T []>
             return NULL;
         }
 
-    template<typename ...argtypes>
-        static T *default_new( argtypes ...args )
+        static T *default_new( size_t count )
         {
-            throw std::bad_alloc();
+            return new T[count];
         }
 
     static void destruct( T *object )
