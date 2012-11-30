@@ -9,6 +9,7 @@
 
 #ifndef TEMPLATE_HELPERS_H
 #define TEMPLATE_HELPERS_H
+#include <exception>
 
 class null_argument_exception : public std::exception
 {
@@ -94,6 +95,32 @@ struct template_helper<T *>
         if( object )
         {
             delete object;
+            object = NULL;
+        }
+    }
+};
+
+template<typename T>
+struct template_helper<T []>
+{
+    template<typename ...argtypes>
+        static T *default_value()
+        {
+            return NULL;
+        }
+
+    template<typename ...argtypes>
+        static T *default_new( argtypes ...args )
+        {
+            throw std::bad_alloc();
+        }
+
+    static void destruct( T *object )
+    {
+        // This is an array type so delete if not NULL
+        if( object )
+        {
+            delete [] object;
             object = NULL;
         }
     }
