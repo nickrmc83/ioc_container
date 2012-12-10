@@ -23,6 +23,9 @@ CPP=main.cpp
 # Output name
 OUTPUT=test_app
 
+# files to exclude from instrumentation
+EXINST=stl_,stl_vector.h,basic_string.h,alloc_traits.h
+
 # Linux can use clang++ 3.x or g++ 4.7
 clang:
 	$(CXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
@@ -34,7 +37,7 @@ cov:
 	$(GXX) $(INCLUDES) -g $(CPP) $(CFLAGS) $(COV_FLAGS) -o $(OUTPUT)
 # instrementation build
 inst:
-	$(GXX) $(INCLUDES) $(CPP) instrument.cpp $(CFLAGS) -o $(OUTPUT) -finstrument-functions
+	$(GXX) $(INCLUDES) $(CPP) instrument.cpp $(CFLAGS) -o $(OUTPUT) -finstrument-functions -finstrument-functions-exclude-file-list=$(EXINST)
 clean:
 	rm -r -f $(OUTPUT)*
 	rm -r -f ../*~
