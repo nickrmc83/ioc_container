@@ -13,7 +13,6 @@
 #include <stdint.h>
 #include <memory>
 
-
 // Possible status of tests
 enum TestStatus
 {

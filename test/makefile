@@ -32,6 +32,9 @@ gcc:
 # Code coverage using gcov
 cov:
 	$(GXX) $(INCLUDES) -g $(CPP) $(CFLAGS) $(COV_FLAGS) -o $(OUTPUT)
+# instrementation build
+inst:
+	$(GXX) $(INCLUDES) $(CPP) instrument.cpp $(CFLAGS) -o $(OUTPUT) -finstrument-functions
 clean:
 	rm -r -f $(OUTPUT)*
-	rm -r -f *~
+	rm -r -f ../*~
