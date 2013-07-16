@@ -12,6 +12,7 @@
 #include <vector>
 #include <stdint.h>
 #include <memory>
+#include <cstring>
 
 // Possible status of tests
 enum TestStatus
@@ -219,7 +220,7 @@ static TestStatus TestRegister()
 
     try
     {
-        Container.register_type<InterfaceType *, Concretion *>();
+        Container.register_type<InterfaceType, Concretion>();
         Result = TS_Success;
     }
     catch( const std::exception &e )
@@ -237,8 +238,8 @@ static TestStatus TestTypeIsRegistered()
     ioc::container Container;
     try
     {
-        Container.register_type<InterfaceType *, Concretion *>();
-        if( Container.type_is_registered<InterfaceType *>() )
+        Container.register_type<InterfaceType, Concretion>();
+        if( Container.type_is_registered<InterfaceType>() )
         {
             Result = TS_Success;
         }
@@ -262,11 +263,11 @@ static TestStatus TestRegisterResolve()
     {
         // Register
         std::cout << "Registering Concretion as Interface" << std::endl;
-        Container.register_type<InterfaceType *, Concretion *>();
+        Container.register_type<InterfaceType, Concretion>();
         Result = TS_Resolution_Error;
         // Resolve
         std::cout << "Resolving Interface" << std::endl;
-        std::unique_ptr<InterfaceType> Value( Container.resolve<InterfaceType *>() );
+        std::shared_ptr<InterfaceType> Value = Container.resolve<InterfaceType>();
         if( Value.get() && Value->Success() )
         {
             std::cout << "Successfully resolved Interface" << std::endl;
@@ -292,20 +293,20 @@ static TestStatus TestRegisterResolveComplexType()
         ResetCounters();
 
         // First register a simple type
-        Container.register_type<Concretion *, Concretion *>();
+        Container.register_type<Concretion, Concretion>();
         // Second register a type which requires an instance
         // of our simple type. This forces the Resolver
         // to find a simple type before it attempts to
         // construct our complex type.
-        Container.register_type<ComplexConcretion *, 
-            ComplexConcretion *, 
+        Container.register_type<ComplexConcretion, 
+            ComplexConcretion, 
             Concretion *>();
         Result = TS_Resolution_Error;
 
         // Attempt to resolve the complex type
-        ComplexConcretion *Inst = Container.resolve<ComplexConcretion *>();
+        std::shared_ptr<ComplexConcretion> Inst = Container.resolve<ComplexConcretion>();
 
-        if( Inst )
+        if( Inst.get() )
         {
             Result = TS_Success;
             std::cout << "Successfully resolved complex type" << std::endl;
@@ -325,8 +326,8 @@ static TestStatus TestRegisterWithName()
     ioc::container Container;
     try
     {
-        Container.register_type_with_name<InterfaceType *, Concretion *>( "ThisName" );
-        if( Container.type_is_registered<InterfaceType *>( "ThisName" ) )
+        Container.register_type_with_name<InterfaceType, Concretion>( "ThisName" );
+        if( Container.type_is_registered<InterfaceType>( "ThisName" ) )
         {
             Result = TS_Success;
         }        
@@ -346,10 +347,10 @@ static TestStatus TestRegisterTypeMoreThanOnce()
     ioc::container Container;
     try
     {
-        Container.register_type<InterfaceType *, Concretion *>();
+        Container.register_type<InterfaceType, Concretion>();
         try
         {
-            Container.register_type<InterfaceType *, Concretion *>();
+            Container.register_type<InterfaceType, Concretion>();
             std::cout << "Why?" << std::endl;
         }
         catch( const ioc::registration_exception &e )
@@ -375,10 +376,10 @@ static TestStatus TestRegisterTypeWithNameMoreThanOnce()
     ioc::container Container;
     try
     {
-        Container.register_type_with_name<InterfaceType *, Concretion *>( "ThisName" );
+        Container.register_type_with_name<InterfaceType, Concretion>( "ThisName" );
         try
         {
-            Container.register_type_with_name<InterfaceType *, Concretion *>( "ThisName" );
+            Container.register_type_with_name<InterfaceType, Concretion>( "ThisName" );
         }
         catch( const ioc::registration_exception &e )
         {
@@ -402,8 +403,8 @@ static TestStatus TestRegisterMoreThanOneTypeWithTheSameName()
 
     try
     {
-        Container.register_type_with_name<InterfaceType *, Concretion *>( "ThisName" );
-        Container.register_type_with_name<Concretion *, Concretion *>( "ThisName" );
+        Container.register_type_with_name<InterfaceType, Concretion>( "ThisName" );
+        Container.register_type_with_name<Concretion, Concretion>( "ThisName" );
         Result = TS_Success;
     }
     catch( const std::exception &e )
@@ -422,14 +423,14 @@ static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
     ioc::container Container;
     try
     {
-        Container.register_type<Concretion *, Concretion *>();
-        Container.register_type<InterfaceType *, ThrowingConcretion *>();
-        Container.register_type<CompositeType *, CompositeType *, InterfaceType *, Concretion *>();
+        Container.register_type<Concretion, Concretion>();
+        Container.register_type<InterfaceType, ThrowingConcretion>();
+        Container.register_type<CompositeType, CompositeType, InterfaceType, Concretion>();
         // We expect to catch an error but the constructor variables for
         // Throwing concretion to have been deleted.
         try
         {
-            Container.resolve<CompositeType *>();
+            std::shared_ptr<CompositeType> r = Container.resolve<CompositeType>();
         }
         catch(const std::exception &e)
         {
@@ -447,27 +448,6 @@ static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
     {
         PrintException( __func__, e );
     }
-    
-    return Result;
-}
-
-static TestStatus TestResolveFactoryByName()
-{
-    TestStatus Result = TS_Resolution_Error;
-    const std::string registration_name = "TestName";
-    ioc::container container;
-    try
-    {
-        container.register_type_with_name<Concretion *, Concretion *>( registration_name );
-        if( container.resolve_factory_by_name<Concretion *>( registration_name ) != NULL )
-        {
-            Result = TS_Success;
-        }
-    }
-    catch(const std::exception &e)
-    {
-        PrintException( __func__, e );
-    }
 
     return Result;
 }
@@ -479,8 +459,9 @@ static TestStatus TestResolveInterfaceByName()
     ioc::container container;
     try
     {
-        container.register_type_with_name<Concretion *, Concretion *>( registration_name );
-        if( container.resolve_by_name<Concretion *>( registration_name ) != NULL )
+        container.register_type_with_name<Concretion, Concretion>( registration_name );
+        std::shared_ptr<Concretion> r = container.resolve_by_name<Concretion>( registration_name );
+        if( r.get() != NULL )
         {
             Result = TS_Success;
         }
@@ -499,8 +480,8 @@ static TestStatus TestRemoveRegistration()
     ioc::container container;
     try
     {
-        container.register_type<Concretion *, Concretion *>();
-        if( container.remove_registration<Concretion *>() )
+        container.register_type<Concretion, Concretion>();
+        if( container.remove_registration<Concretion>() )
         {
             Result = TS_Success;
         }
@@ -519,8 +500,8 @@ static TestStatus TestRemoveRegistrationByName()
     ioc::container container;
     try
     {
-        container.register_type_with_name <Concretion *, Concretion *>( registration_name );
-        if( container.remove_registration_by_name<Concretion *>( registration_name ) )
+        container.register_type_with_name <Concretion, Concretion>( registration_name );
+        if( container.remove_registration_by_name<Concretion>( registration_name ) )
         {
             Result = TS_Success;
         }
@@ -545,8 +526,8 @@ static TestStatus TestRegisterDelegate()
     ioc::container container;
     try
     {
-        container.register_delegate<Concretion *>( CreateConcretion );
-        if( container.type_is_registered<Concretion *>() )
+        container.register_delegate<Concretion>( CreateConcretion );
+        if( container.type_is_registered<Concretion>() )
         {
             Result = TS_Success;
         }
@@ -555,7 +536,7 @@ static TestStatus TestRegisterDelegate()
     {
         PrintException( __func__, e );
     }
-    
+
     return Result;
 }
 
@@ -566,8 +547,8 @@ static TestStatus TestRegisterDelegateWithName()
     ioc::container container;
     try
     {
-        container.register_delegate_with_name<Concretion *>( registration_name, CreateConcretion );
-        if( container.type_is_registered<Concretion *>( registration_name ) )
+        container.register_delegate_with_name<Concretion>( registration_name, CreateConcretion );
+        if( container.type_is_registered<Concretion>( registration_name ) )
         {
             Result = TS_Success;
         }
@@ -598,7 +579,6 @@ static std::vector<TestFunctionObject> GetRegisteredTests()
     REGISTER_TEST( Result, TestRegisterTypeWithNameMoreThanOnce );
     REGISTER_TEST( Result, TestRegisterMoreThanOneTypeWithTheSameName );
     REGISTER_TEST( Result, TestResolveComplexTypeClearsUpConstructedTypesOnError );
-    REGISTER_TEST( Result, TestResolveFactoryByName );
     REGISTER_TEST( Result, TestResolveInterfaceByName );
     REGISTER_TEST( Result, TestRemoveRegistration );
     REGISTER_TEST( Result, TestRemoveRegistrationByName );
@@ -663,13 +643,13 @@ static int ExecuteTests( const std::vector<TestFunctionObject> &Tests )
 // Execute methods
 int main( int argc, char **argv )
 {
-   // Print commandline variables to std::out
+    // Print commandline variables to std::out
     std::cout << "This application was executed with the following arguments" << std::endl;
     for( int i = 0; i < argc; i++ )
     {
         std::cout << (i+1) << ") " << argv[i] << std::endl;
     }
-    
+
     std::cout << std::endl;
 
     // Register functions for test

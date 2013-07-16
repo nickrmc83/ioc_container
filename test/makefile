@@ -24,14 +24,14 @@ CPP=main.cpp
 OUTPUT=test_app
 
 # files to exclude from instrumentation
-EXINST=stl_,stl_vector.h,basic_string.h,alloc_traits.h
+EXINST=typeinfo,stdlib.h,string,stl_vector.h,stl_iterator.h
 
 # Linux can use clang++ 3.x or g++ 4.7
 clang:
 	$(CXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
 # Windows uses g++ 4.7 January 2012
 gcc:
-	$(GXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
+	$(GXX) $(INCLUDES) $(CPP) $(CFLAGS) -fstack-protector-all -o $(OUTPUT)
 # Code coverage using gcov
 cov:
 	$(GXX) $(INCLUDES) -g $(CPP) $(CFLAGS) $(COV_FLAGS) -o $(OUTPUT)
@@ -41,3 +41,4 @@ inst:
 clean:
 	rm -r -f $(OUTPUT)*
 	rm -r -f ../*~
+	rm -r -f *~

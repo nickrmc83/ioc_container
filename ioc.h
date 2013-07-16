@@ -15,10 +15,10 @@
 #include <typeinfo>
 #include <vector>
 #include <string>
-//#include <tuple.h>
 #include <tuple>
 #include <ioc_container/template_helpers.h>
 #include <ioc_container/tuple_helper.h>
+#include <memory>
 
 namespace ioc
 {
@@ -37,14 +37,7 @@ namespace ioc
     class ifactory 
     {
         public:
-            ifactory()
-            {
-            }
-
-            virtual ~ifactory()
-            {
-            }
-
+            virtual ~ifactory(){}
             virtual const std::type_info &get_type() const = 0;
             virtual const std::string &get_name() const = 0;
             virtual void* create_item() const = 0;
@@ -80,7 +73,7 @@ namespace ioc
     {
         private:
             std::string name;
-            virtual I internal_create_item() const = 0;
+            virtual I *internal_create_item() const = 0;
 
         public:
 
@@ -120,16 +113,15 @@ namespace ioc
             ioc::container &container_obj;
             callable callable_obj;
 
-            I internal_create_item() const
+            I *internal_create_item() const
             {
-                // Resolve delgate arguments
                 // Resolve all variables for construction.
                 // If there is an error during resolution
                 // then the Resolver will de-allocate any
                 // already resolved objects for us.
-                std::tuple<argtypes...> args;
-                tuple_resolve::resolve( container_obj, args );
-                I result = tuple_unwrap::call( callable_obj, args );
+                std::tuple<argtypes...> args =
+                    tuple_resolve::resolve( container_obj );
+                I *result = tuple_unwrap::call( callable_obj, args );
                 return result;
             }
 
@@ -139,8 +131,8 @@ namespace ioc
                     callable &callable_obj_in )
                 : base_factory<I>( name_in ), container_obj( container_in ), 
                 callable_obj( callable_obj_in )
-        {
-        }
+            {
+            }
 
             ~delegate_factory()
             {
@@ -157,19 +149,19 @@ namespace ioc
     // and return an instance of a specific type.
     template<typename I, typename T, typename ...argtypes>
         class resolvable_factory 
-        : public delegate_factory<I, T (*)( argtypes...), argtypes...>
+        : public delegate_factory<I, T* (*)( argtypes...), argtypes...>
         {
             private: 
-                static T creator( argtypes ...args )
+                static T *creator( argtypes ...args )
                 {
-                    return template_helper<T>::default_new( args... );
+                    return template_helper<T *>::default_new( args... );
                 }
 
             public:
                 resolvable_factory( 
                         const std::string &name_in, 
                         ioc::container &container_in )
-                    : delegate_factory<I, T (*)( argtypes... ), argtypes...>
+                    : delegate_factory<I, T* (*)( argtypes... ), argtypes...>
                       ( name_in, container_in, resolvable_factory::creator )
             {
             }
@@ -189,15 +181,15 @@ namespace ioc
         : public base_factory<I>
         {
             private: 
-                I instance;
+                std::shared_ptr<I> instance;
 
-                I internal_create_item() const
+                I *internal_create_item() const
                 {
-                    return instance;
+                    return instance.get();
                 }
 
             public:
-                instance_factory( const std::string &name_in, I instance_in )
+                instance_factory( const std::string &name_in, std::shared_ptr<I> instance_in )
                     : base_factory<I>( name_in ), instance( instance_in )
                 {
                 }
@@ -256,6 +248,10 @@ namespace ioc
     class container
     {
         private:
+            // Hold a reference to ourselves so if anybody
+            // unregisters the container it is not garabage
+            // collected by the shared_ptr.
+            std::shared_ptr<container> me;
             // Internal list of registered types
             std::vector<ifactory *> types;
 
@@ -268,14 +264,56 @@ namespace ioc
                 }
             }
 
+            // Resolve factory for interface. If that fails then return NULL.
+            template<typename I>
+                const ifactory *resolve_factory() const
+                {
+                    // Lookup interface type. If it cannot be found return
+                    // the default for that type.
+                    ifactory *result = NULL;
+                    std::vector<ifactory *>::const_iterator i = types.begin();
+                    while( ( result == NULL ) && ( i != types.end() ) )
+                    {
+                        if( (*i)->get_type() == typeid(I*) )
+                        {
+                            result = *i;
+                        }
+                        i++;
+                    }
+                    return result;
+                }
+
+            // Resolve factory for interface type by name. 
+            // If that fails then return NULL.
+            template<typename I>
+                ifactory *
+                resolve_factory_by_name( const std::string &name_in ) const
+                {
+                    // Lookup interface type. If it cannot be found return
+                    // the default for that type.
+                    ifactory *result = NULL;
+                    std::vector<ifactory *>::const_iterator i = types.begin();
+                    while( ( result == NULL ) && ( i != types.end() ) )
+                    {
+                        if( ( (*i)->get_type() == typeid(I*) ) &&
+                                ( (*i)->get_name() == name_in ) )
+                        {
+                            result = *i;
+                        }
+                        i++;
+                    }
+                    return result;
+                }
+
         public:
             container()
             {
                 // Register Container so it can be resolved into
                 // objects for delayed resolution later after
                 // construction
-                register_instance_with_name<ioc::container *>( 
-                        ioc_type_name_registration, this );
+                me.reset<container>(this);
+                register_instance_with_name<ioc::container>( 
+                        ioc_type_name_registration, me );
             }
 
             ~container()
@@ -300,7 +338,7 @@ namespace ioc
                     std::vector<ifactory *>::const_iterator end = types.end();
                     while( ( result == false ) && ( i != end ) )
                     {
-                        if( ( (*i)->get_type() == typeid(I) ) &&
+                        if( ( (*i)->get_type() == typeid(I*) ) &&
                                 ( (*i)->get_name() == name_in ) )
                         {
                             result = true;
@@ -372,45 +410,27 @@ namespace ioc
 
             template<typename I>
                 void register_instance_with_name( const std::string &name_in,
-                        I instance_in )
+                        std::shared_ptr<I> instance_in )
                 {
                     // Create instance constuctor and register in our type list
                     typedef instance_factory<I> factorytype;
-                    register_with_name_template<factorytype, I, I>( name_in, 
+                    register_with_name_template<factorytype, I, std::shared_ptr<I>>( 
+                            name_in, 
                             instance_in );
                 }
 
 
             template<typename I>
-                void register_instance( I instance_in )
+                void register_instance( std::shared_ptr<I> instance_in )
                 {
                     register_instance_with_name<I>( 
                             unnamed_type_name_registration, instance_in );
                 }
 
-            // Resolve factory for interface. If that fails then return NULL.
-            template<typename I>
-                const ifactory *resolve_factory() const
-                {
-                    // Lookup interface type. If it cannot be found return
-                    // the default for that type.
-                    ifactory *result = NULL;
-                    std::vector<ifactory *>::const_iterator i = types.begin();
-                    while( ( result == NULL ) && ( i != types.end() ) )
-                    {
-                        if( (*i)->get_type() == typeid(I) )
-                        {
-                            result = *i;
-                        }
-                        i++;
-                    }
-                    return result;
-                }
-
             template<typename I>
                 std::pair<I, resolution_attributes> resolve_with_attributes() const
                 {
-                    I result = template_helper<I>::default_value();
+                    I *result = template_helper<I *>::default_value();
                     const ifactory *factory = resolve_factory<I>();
                     if( !factory )
                     {
@@ -419,58 +439,36 @@ namespace ioc
                     }
 
                     resolution_attributes attribs( factory->is_destructable() );
-                    result = reinterpret_cast<I>( factory->create_item() );
+                    result = reinterpret_cast<I *>( factory->create_item() );
                     return std::pair<I, resolution_attributes>( result, attribs );
                 }
 
             // Resolve interface type. If that fails then return NULL.
             template<typename I>
-                I resolve() const
+                std::shared_ptr<I> resolve() const
                 {
-                    I result = template_helper<I>::default_value();
+                    I *result = template_helper<I *>::default_value();
                     const ifactory *factory = resolve_factory<I>();
                     if( factory )
                     {
-                        result = reinterpret_cast<I>( factory->create_item() );
+                        result = reinterpret_cast<I *>( factory->create_item() );
                     }
 
-                    return result;
-                }
-
-            // Resolve factory for interface type by name. 
-            // If that fails then return NULL.
-            template<typename I>
-                ifactory *
-                resolve_factory_by_name( const std::string &name_in ) const
-                {
-                    // Lookup interface type. If it cannot be found return
-                    // the default for that type.
-                    ifactory *result = NULL;
-                    std::vector<ifactory *>::const_iterator i = types.begin();
-                    while( ( result == NULL ) && ( i != types.end() ) )
-                    {
-                        if( ( (*i)->get_type() == typeid(I) ) &&
-                                ( (*i)->get_name() == name_in ) )
-                        {
-                            result = *i;
-                        }
-                        i++;
-                    }
-                    return result;
+                    return std::shared_ptr<I>(result);
                 }
 
             // Resolve interface type by name. If that fails then return NULL.
             template<typename I>
-                I resolve_by_name( const std::string &name_in ) const
+                std::shared_ptr<I> resolve_by_name( const std::string &name_in ) const
                 {
-                    I result = template_helper<I>::default_value();
+                    I *result = template_helper<I *>::default_value();
                     const ifactory *factory = 
                         resolve_factory_by_name<I>( name_in );
                     if( factory )
                     {
-                        result = reinterpret_cast<I>( factory->create_item() );
+                        result = reinterpret_cast<I *>( factory->create_item() );
                     }
-                    return result;
+                    return std::shared_ptr<I>(result);
                 }
 
             // Destroy the first factory which creates an interface
