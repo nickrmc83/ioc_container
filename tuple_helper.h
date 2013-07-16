@@ -7,6 +7,7 @@
  */
 
 #include <tuple>
+#include <memory>
 #include <stdint.h>
 #include <exception>
 #include <ioc_container/template_helpers.h>
@@ -64,64 +65,72 @@ struct tuple_unwrap
         }
 };
 
+struct tuple_concat
+{
+    template<typename concat, typename ...arg_types>
+        static std::tuple<arg_types..., concat> concat( concat c, const std::tuple<arg_types...> &tuple )
+        {
+            std::tuple<concat, arg_types...> result;
+            // Set first value
+            concat &tv = std::get<sizeof...(arg_types)>( result );
+            tv = c;
+            // Set all remianing values.
+            for( size_t i = 0; i < sizeof...(arg_types); i++ )
+            {
+                auto from = std::get<i>( tuple );
+                auto &to = std::get<i>( result );
+                to = from;
+            }
+            
+            return result;
+        }
+};
+
 template<size_t index>
 struct tuple_resolve_impl;
 
 template<>
 struct tuple_resolve_impl<0>
 {
-    template<typename resolver_type, typename tuple_type>
-        static void resolve( resolver_type &resolver, tuple_type &tuple )
+    template<typename resolver_type>
+        static std::tuple<> resolve( resolver_type &resolver )
         {
-            //static_assert( false, "Cannot unwarp an empty tuple" );
+            return std::tuple<>();
         }
 };
 
 template<>
 struct tuple_resolve_impl<1>
 {
-    template<typename resolver_type, typename tuple_type>
-        static void resolve( resolver_type &resolver, tuple_type &tuple )
+    template<typename resolver_type, typename val_type>
+        static std::tuple<std::shared_ptr<val_type>> resolve( resolver_type &resolver)
         {
-            typedef typename std::tuple_element<0, tuple_type>::type this_type;
-            this_type &val = std::get<0>( tuple );
-            val = resolver.resolve<this_type>();
+            return std::tuple<std::shared_ptr<val_type>>( resolver.template resolve<val_type>() );
         }
 };
 
 template<size_t index>
 struct tuple_resolve_impl
 {
-    template<typename resolver_type, typename tuple_type>
-        static void resolve( resolver_type &resolver, tuple_type &tuple )
+    template<typename resolver_type, typename first, typename ...arg_types>
+        static void resolve( resolver_type &resolver )
         {
-            typedef typename std::tuple_element<index - 1, tuple_type>::type this_type;
-            this_type &val = std::get<index - 1>( tuple );
-            // Below call may throw. Should be handled by outer recursive call
-            auto resolved_value = resolver.template resolve_with_attributes<this_type>();
-            try
-            {
-                tuple_resolve_impl<index-1>::resolve( resolver, tuple );
-                val = resolved_value.first;
-            }
-            catch( const std::exception &e )
-            {
-                // destroy the reference to our resolved value
-                if( resolved_value.second.is_destructable() )
-                {
-                    template_helper<this_type>::destruct( resolved_value.first );
-                }
-                // Re throw so higher levels can do the same.
-                throw;
-            }
+            std::shared_ptr<first> f = resolver.template resolve<first>();
+            auto result = tuple_concat::concat( f, 
+                    tuple_resolve_impl<index-1>::
+                        template resolve<resolver_type, arg_types...>(resolver) );
+            return result;
         }
 };
 
 struct tuple_resolve
 {
+    // Return a std::tuple containing shared ptr of resolved arg_type instances.
     template<typename resolver_type, typename ...arg_types>
-        static void resolve( resolver_type &resolver, std::tuple<arg_types...> &tuple )
+        static auto resolve( resolver_type &resolver )
+        -> decltype(tuple_resolve_impl<sizeof...(arg_types)>::template resolve(resolver))
         {
-            tuple_resolve_impl<sizeof...(arg_types)>::resolve( resolver, tuple );
+            return tuple_resolve_impl<sizeof...(arg_types)>::
+                template resolve<resolver_type, arg_types...>( resolver );
         }
 };
