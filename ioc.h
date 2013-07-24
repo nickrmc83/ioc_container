@@ -43,27 +43,6 @@ namespace ioc
             virtual bool is_destructable() const = 0;
     };
 
-    class resolution_attributes
-    {
-        private:
-            bool destructable;
-        public:
-            resolution_attributes()
-                : destructable( false )
-            {
-            }
-
-            resolution_attributes( bool destructable_in )
-                : destructable( destructable_in )
-            {
-            }
-
-            bool is_destructable() const
-            {
-                return destructable;
-            }
-    };
-
     // BaseFatory extends ifactory to provide some standard
     // functionality that is required by most concrete
     // factoy types.
@@ -314,7 +293,7 @@ namespace ioc
                     std::vector<ifactory *>::const_iterator i = types.begin();
                     while( ( result == NULL ) && ( i != types.end() ) )
                     {
-                        if( (*i)->get_type() == typeid(I*) )
+                        if( (*i)->get_type() == typeid(I) )
                         {
                             result = *i;
                         }
@@ -335,7 +314,7 @@ namespace ioc
                     std::vector<ifactory *>::const_iterator i = types.begin();
                     while( ( result == NULL ) && ( i != types.end() ) )
                     {
-                        if( ( (*i)->get_type() == typeid(I*) ) &&
+                        if( ( (*i)->get_type() == typeid(I) ) &&
                                 ( (*i)->get_name() == name_in ) )
                         {
                             result = *i;
@@ -348,12 +327,6 @@ namespace ioc
         public:
             container()
             {
-                // Register Container so it can be resolved into
-                // objects for delayed resolution later after
-                // construction
-                me.reset<container>(this);
-                register_instance_with_name<ioc::container>( 
-                        ioc_type_name_registration, me );
             }
 
             ~container()
@@ -378,7 +351,7 @@ namespace ioc
                     std::vector<ifactory *>::const_iterator end = types.end();
                     while( ( result == false ) && ( i != end ) )
                     {
-                        if( ( (*i)->get_type() == typeid(I*) ) &&
+                        if( ( (*i)->get_type() == typeid(I) ) &&
                                 ( (*i)->get_name() == name_in ) )
                         {
                             result = true;
@@ -465,22 +438,6 @@ namespace ioc
                 {
                     register_instance_with_name<I>( 
                             unnamed_type_name_registration, instance_in );
-                }
-
-            template<typename I>
-                std::pair<I, resolution_attributes> resolve_with_attributes() const
-                {
-                    I *result = template_helper<I *>::default_value();
-                    const ifactory *factory = resolve_factory<I>();
-                    if( !factory )
-                    {
-                        // TODO create special exception for this type
-                        throw std::bad_exception();
-                    }
-
-                    resolution_attributes attribs( factory->is_destructable() );
-                    result = reinterpret_cast<I *>( factory->create_item() );
-                    return std::pair<I, resolution_attributes>( result, attribs );
                 }
 
             // Resolve interface type. If that fails then return NULL.

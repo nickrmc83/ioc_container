@@ -86,7 +86,7 @@ static void PrintTestSuccess( const TestFunctionObject &Obj )
 
 static void PrintTestFailure( const TestFunctionObject &Obj )
 {
-    std::cout << Obj.GetName() << " failure" << std::endl;
+    std::cerr << Obj.GetName() << " failure" << std::endl;
 }
 
 
@@ -158,12 +158,12 @@ struct ThrowingConcretion : public InterfaceType
 
 struct CompositeType
 {
-    std::shared_ptr<InterfaceType> Interface;
     std::shared_ptr<Concretion> Concrete;
+    std::shared_ptr<InterfaceType> Interface;
 
-    CompositeType( std::shared_ptr<InterfaceType> InterfaceIn, 
-            std::shared_ptr<Concretion> ConcreteIn )
-        : Interface( InterfaceIn ), Concrete( ConcreteIn )
+    CompositeType(  
+            std::shared_ptr<Concretion> ConcreteIn,std::shared_ptr<InterfaceType> InterfaceIn )
+        :  Concrete( ConcreteIn ), Interface( InterfaceIn )
     {
     }
 };
@@ -426,7 +426,7 @@ static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
     {
         Container.register_type<Concretion, Concretion>();
         Container.register_type<InterfaceType, ThrowingConcretion>();
-        Container.register_type<CompositeType, CompositeType, InterfaceType, Concretion>();
+        Container.register_type<CompositeType, CompositeType, Concretion, InterfaceType>();
         // We expect to catch an error but the constructor variables for
         // Throwing concretion to have been deleted.
         try
