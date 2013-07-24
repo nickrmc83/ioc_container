@@ -135,9 +135,9 @@ struct Concretion : public InterfaceType
 
 struct ComplexConcretion : public Concretion
 {
-    Concretion *InnerInstance;
+    std::shared_ptr<Concretion> InnerInstance;
 
-    ComplexConcretion( Concretion *Instance )
+    ComplexConcretion( std::shared_ptr<Concretion> Instance )
         : InnerInstance( Instance )
     {
     }
@@ -158,10 +158,11 @@ struct ThrowingConcretion : public InterfaceType
 
 struct CompositeType
 {
-    InterfaceType *Interface;
-    Concretion *Concrete;
+    std::shared_ptr<InterfaceType> Interface;
+    std::shared_ptr<Concretion> Concrete;
 
-    CompositeType( InterfaceType *InterfaceIn, Concretion *ConcreteIn )
+    CompositeType( std::shared_ptr<InterfaceType> InterfaceIn, 
+            std::shared_ptr<Concretion> ConcreteIn )
         : Interface( InterfaceIn ), Concrete( ConcreteIn )
     {
     }
@@ -300,7 +301,7 @@ static TestStatus TestRegisterResolveComplexType()
         // construct our complex type.
         Container.register_type<ComplexConcretion, 
             ComplexConcretion, 
-            Concretion *>();
+            Concretion>();
         Result = TS_Resolution_Error;
 
         // Attempt to resolve the complex type

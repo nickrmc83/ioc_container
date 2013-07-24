@@ -52,6 +52,8 @@ class null_argument_exception : public std::exception
 template<typename T>
 struct template_helper
 {
+    typedef T type;
+
     template<typename ...argtypes>
         static T default_value( argtypes ...args )
         {
@@ -76,6 +78,7 @@ struct template_helper
 template<typename T>
 struct template_helper<T *>
 {
+    typedef T* type;
     template<typename ...argtypes>
         static T *default_value()
         {
