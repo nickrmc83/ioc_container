@@ -28,7 +28,6 @@ namespace ioc
     static const std::string 
         unnamed_type_name_registration = "Unnamed registration";
 
-    // pre-declaration to satisfy factory types
     class container;
 
     // ifactory is the base interface for a factory 
@@ -102,6 +101,41 @@ namespace ioc
             }
     };
 
+    template<size_t index>
+    struct recursive_resolve_impl;
+
+    template<>
+    struct recursive_resolve_impl<0>
+    {
+        template<typename resolver_type, typename t, typename callable_type>
+            static t *resolve(resolver_type &resolver, callable_type callable)
+            {
+                return callable();
+            }
+    };
+    
+    template<size_t i>
+    struct recursive_resolve_impl
+    {
+        template<typename resolver_type, typename t, 
+            typename callable_type, typename ...argtypes>
+            static t *resolve(resolver_type &resolver, callable_type callable)
+            {
+                return callable(resolver.template resolve<argtypes>()...);
+            }
+    };
+
+    struct recursive_resolve
+    {
+        template<typename t, typename resolver_type, 
+            typename callable_type, typename ...argtypes>
+        static t *resolve(resolver_type &resolver, callable_type callable)
+        {
+            return recursive_resolve_impl<sizeof...(argtypes)>
+                ::template resolve<resolver_type, t, callable_type, argtypes...>(resolver, callable);
+        }
+    };
+
     // DelegateFactory allows delegate objects or routines to be
     // supplied and called for object construction. All delegate
     // arguments are resolved by the resolver before being send
@@ -119,9 +153,13 @@ namespace ioc
                 // If there is an error during resolution
                 // then the Resolver will de-allocate any
                 // already resolved objects for us.
-                std::tuple<argtypes...> args =
-                    tuple_resolve::resolve( container_obj );
-                I *result = tuple_unwrap::call( callable_obj, args );
+                
+                //auto args =
+                //    tuple_resolve::
+                //        resolve<ioc::container, argtypes...>( container_obj );
+                //I *result = tuple_unwrap::call( callable_obj, args );
+                I *result = recursive_resolve
+                    ::resolve<I, ioc::container, callable, argtypes...>(container_obj, callable_obj);
                 return result;
             }
 
@@ -149,19 +187,21 @@ namespace ioc
     // and return an instance of a specific type.
     template<typename I, typename T, typename ...argtypes>
         class resolvable_factory 
-        : public delegate_factory<I, T* (*)( argtypes...), argtypes...>
+        : public delegate_factory<I, I* (*)( std::shared_ptr<argtypes>...), 
+        argtypes...>
         {
-            private: 
-                static T *creator( argtypes ...args )
+            private:
+                static I *creator(std::shared_ptr<argtypes>... args)
                 {
-                    return template_helper<T *>::default_new( args... );
+                    return new T(args...);
                 }
-
             public:
+                typedef I *(func_type)(std::shared_ptr<argtypes>...);
+                
                 resolvable_factory( 
                         const std::string &name_in, 
                         ioc::container &container_in )
-                    : delegate_factory<I, T* (*)( argtypes... ), argtypes...>
+                    : delegate_factory<I, I *(*)(std::shared_ptr<argtypes>...), argtypes...>
                       ( name_in, container_in, resolvable_factory::creator )
             {
             }
