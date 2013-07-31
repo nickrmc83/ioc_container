@@ -255,12 +255,24 @@ namespace ioc
     class container
     {
         private:
+            template<typename T>
+            struct ellided_deleter
+            {
+                void operator()(T *val)
+                {
+                    // Shhhhh, don't actually delete the ptr.
+                }
+            };
+            typedef ellided_deleter<container> container_deleter;
+            
             // Internal map of registered types -> map of named instances of
             // type factories.
             typedef std::map<std::string, ifactory*> named_factory;
             typedef std::map<size_t, named_factory> registration_types;
-            
+
             registration_types types;
+
+            std::shared_ptr<container> self;
 
             static inline void destroy_factory( ifactory *factory )
             {
@@ -327,10 +339,15 @@ namespace ioc
                     }
                     return result;
                 }
+            
+            
 
         public:
-            container()
+            container() : self(this, container_deleter())
             {
+                // Register our special shared_ptr which will not
+                // delete if a container is resolved.
+                this->register_instance<container>(self);
             }
 
             ~container()
