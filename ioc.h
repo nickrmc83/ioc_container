@@ -15,6 +15,7 @@
 #include <typeinfo>
 #include <map>
 #include <string>
+#include <cstring>
 #include <tuple>
 #include <ioc_container/template_helpers.h>
 #include <ioc_container/tuple_helper.h>
@@ -270,7 +271,8 @@ namespace ioc
             // Internal map of registered types -> map of named instances of
             // type factories.
             typedef std::map<std::string, ifactory*> named_factory;
-            std::map<std::type_info, named_factory> types;
+            typedef std::map<size_t, named_factory> registration_types;
+            registration_types types;
 
             static inline void destroy_factory( ifactory *factory )
             {
@@ -294,7 +296,7 @@ namespace ioc
                                 name_in );
                     }
                     F *new_factory = new F( name_in, args... );
-                    types[typeid(I)] = new_factory;
+                    types[typeid(I).hash_code()][name_in] = new_factory;
                 }
             // Resolve factory for interface. If that fails then return NULL.
             template<typename I>
@@ -303,7 +305,7 @@ namespace ioc
                     // Lookup interface type. If it cannot be found return
                     // the default for that type.
                     ifactory *result = NULL;
-                    std::map<std::type_info, named_factory>::const_iterator i = types.find(typeid(I));
+                    registration_types::const_iterator i = types.find(typeid(I).hash_code());
                     if( i != types.end() )
                     {
                         const named_factory candidates =
@@ -322,12 +324,12 @@ namespace ioc
                     // Lookup interface type. If it cannot be found return
                     // the default for that type.
                     ifactory *result = NULL;
-                    std::map<std::type_info, named_factory>::const_iterator i = types.find(typeid(I));
+                    registration_types::const_iterator i = types.find(typeid(I).hash_code());
                     if( i != types.end() )
                     {
                         // We've got the type registered but we now need to look
                         // up the named version.
-                        const std::map<std::string, ifactory *>::const_iterator c = 
+                        const named_factory::const_iterator c = 
                             i->second.find(name_in);
                         if( c != i->second.end() )
                         {
@@ -345,10 +347,10 @@ namespace ioc
             ~container()
             {
                 // Destroy all factories
-                for( std::map<std::type_info, named_factory>::reverse_iterator i = types.rbegin();
+                for( registration_types::reverse_iterator i = types.rbegin();
                         i != types.rend(); ++i )
                 {
-                    for(std::map<std::string, ifactory *>::reverse_iterator j = i->second.rbegin(); 
+                    for(named_factory::reverse_iterator j = i->second.rbegin(); 
                             j != i->second.rend(); ++j)
                     {
                         destroy_factory( j->second );
@@ -460,22 +462,22 @@ namespace ioc
                     return std::shared_ptr<I>(result);
                 }
 
-            // Destroy the first factory which creates an interface
+            // Destroy all factories implementing the given interface
             template<typename I>
                 bool remove_registration()
                 {
                     bool result = false;
-                    std::map<ifactory *>::iterator i = types.begin();
-                    std::map<ifactory *>::iterator end = types.end();
-                    while( ( result == false ) && ( i != end ) )
+                    registration_types::iterator i = types.find(typeid(I).hash_code());
+                    if( i != types.end() )
                     {
-                        if( (*i)->get_type() == typeid(I) )
+                        for( named_factory::iterator j = i->second.begin(); 
+                                j != i->second.end(); ++j )
                         {
-                            destroy_factory( *i );
-                            types.erase( i ); 
-                            result = true;   
+                            destroy_factory( j->second );
+                            i->second.erase( j ); 
                         }
-                        ++i;
+                        types.erase(i);
+                        result = true;
                     }
                     return result;
                 }
@@ -486,18 +488,16 @@ namespace ioc
                 bool remove_registration_by_name( const std::string &name_in )
                 {
                     bool result = false;
-                    std::map<ifactory *>::iterator i = types.begin();
-                    std::map<ifactory *>::iterator end = types.end();
-                    while( ( result == false ) && ( i != end ) )
+                    registration_types::iterator i = types.find(typeid(I).hash_code());
+                    if( i != types.end() )
                     {
-                        if( ( (*i)->get_type() == typeid(I) ) &&
-                                ( (*i)->get_name() == name_in ) )
+                        named_factory::iterator j = i->second.find(name_in); 
+                        if( j != i->second.end() )
                         {
-                            destroy_factory( *i );
-                            types.erase( i ); 
-                            result = true;   
+                            destroy_factory( j->second );
+                            i->second.erase( j );
+                           result = true; 
                         }
-                        ++i;
                     }
                     return result;
                 }
