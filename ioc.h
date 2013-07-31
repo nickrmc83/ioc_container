@@ -16,9 +16,6 @@
 #include <map>
 #include <string>
 #include <cstring>
-#include <tuple>
-#include <ioc_container/template_helpers.h>
-#include <ioc_container/tuple_helper.h>
 #include <memory>
 
 namespace ioc
@@ -41,7 +38,6 @@ namespace ioc
             virtual const std::type_info &get_type() const = 0;
             virtual const std::string &get_name() const = 0;
             virtual void* create_item() const = 0;
-            virtual bool is_destructable() const = 0;
     };
 
     // BaseFatory extends ifactory to provide some standard
@@ -156,10 +152,6 @@ namespace ioc
             {
             }
 
-            bool is_destructable() const
-            {
-                return true;
-            }
     };
 
     // ResolvableFactory extends DelegateFactory by supplying
@@ -217,11 +209,6 @@ namespace ioc
                 ~instance_factory()
                 {
                 }
-
-                bool is_destructable() const
-                {
-                    return false;
-                }
         };
 
     // Registration exception classes
@@ -272,6 +259,7 @@ namespace ioc
             // type factories.
             typedef std::map<std::string, ifactory*> named_factory;
             typedef std::map<size_t, named_factory> registration_types;
+            
             registration_types types;
 
             static inline void destroy_factory( ifactory *factory )
@@ -298,6 +286,7 @@ namespace ioc
                     F *new_factory = new F( name_in, args... );
                     types[typeid(I).hash_code()][name_in] = new_factory;
                 }
+            
             // Resolve factory for interface. If that fails then return NULL.
             template<typename I>
                 const ifactory *resolve_factory() const
@@ -438,7 +427,7 @@ namespace ioc
             template<typename I>
                 std::shared_ptr<I> resolve() const
                 {
-                    I *result = template_helper<I *>::default_value();
+                    I *result = NULL;
                     const ifactory *factory = resolve_factory<I>();
                     if( factory )
                     {
@@ -452,7 +441,7 @@ namespace ioc
             template<typename I>
                 std::shared_ptr<I> resolve_by_name( const std::string &name_in ) const
                 {
-                    I *result = template_helper<I *>::default_value();
+                    I *result = NULL;
                     const ifactory *factory = 
                         resolve_factory_by_name<I>( name_in );
                     if( factory )
