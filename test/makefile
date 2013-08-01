@@ -31,7 +31,7 @@ clang:
 	$(CXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
 # Windows uses g++ 4.7 January 2012
 gcc:
-	$(GXX) $(INCLUDES) $(CPP) $(CFLAGS) -fstack-protector-all -o $(OUTPUT)
+	$(GXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
 # Code coverage using gcov
 cov:
 	$(GXX) $(INCLUDES) -g $(CPP) $(CFLAGS) $(COV_FLAGS) -o $(OUTPUT)

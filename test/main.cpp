@@ -158,12 +158,17 @@ struct ThrowingConcretion : public InterfaceType
 
 struct CompositeType
 {
-    std::shared_ptr<Concretion> Concrete;
+    std::shared_ptr<Concretion> Concrete1;
     std::shared_ptr<InterfaceType> Interface;
+    std::shared_ptr<Concretion> Concrete2;
 
     CompositeType(  
-            std::shared_ptr<Concretion> ConcreteIn,std::shared_ptr<InterfaceType> InterfaceIn )
-        :  Concrete( ConcreteIn ), Interface( InterfaceIn )
+            std::shared_ptr<Concretion> ConcreteIn1,
+            std::shared_ptr<InterfaceType> InterfaceIn,
+            std::shared_ptr<Concretion> ConcreteIn2 )
+        :  Concrete1( ConcreteIn1 ), 
+        Interface( InterfaceIn ),
+        Concrete2( ConcreteIn2 )
     {
     }
 };
@@ -426,7 +431,7 @@ static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
     {
         Container.register_type<Concretion, Concretion>();
         Container.register_type<InterfaceType, ThrowingConcretion>();
-        Container.register_type<CompositeType, CompositeType, Concretion, InterfaceType>();
+        Container.register_type<CompositeType, CompositeType, Concretion, InterfaceType, Concretion>();
         // We expect to catch an error but the constructor variables for
         // Throwing concretion to have been deleted.
         try
@@ -438,7 +443,7 @@ static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
             PrintException( __func__, e );
         }
         // We expect a single concretion
-        if( ( ConstructedCount == 1 ) && ( DestructedCount == 1 ) )
+        if( ( ConstructedCount >= 1 ) && ( DestructedCount == ConstructedCount ) )
         {
             std::cout << "Constructed " << ConstructedCount << 
                 ", Destructed " << DestructedCount << std::endl;
