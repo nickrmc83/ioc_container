@@ -179,9 +179,8 @@ A) Yes there are unit tests. These unit tests provide a good way of learning how
 
 The unit tests can be found in the sub-folder ./test. To build the unit tests you will need either Clang 3.0 installed or g++ 4.7. The unit test application is called TestApp and returns a non-zero result if any test fail. 
 
-To build against the Clang compiler set the CXX environment variable to clang++. For example:
+To build against the Clang compiler set the CXX environment variable to clang++. For example, when in the root of the repo, run the following:
 
-# Run from repo root directory
 export CXX=clang++
 make -C test
 
