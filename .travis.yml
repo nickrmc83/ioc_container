@@ -3,4 +3,4 @@ compiler:
   - gcc
   - clang
 # Change this to your needs
-script: make -C test && make -C
+script: make -C test && ./test_app
