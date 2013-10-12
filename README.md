@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/[nickrmc83]/[ioc_container].png)](https://travis-ci.org/[nickrmc83]/[ioc_container])
+[![Build Status](https://travis-ci.org/nickrmc83/ioc_container]png)](https://travis-ci.org/nickrmc83/ioc_container)
 
 ioc_container
 =============
