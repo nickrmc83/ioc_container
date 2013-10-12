@@ -182,6 +182,7 @@ The unit tests can be found in the sub-folder ./test. To build the unit tests yo
 To build against the Clang compiler set the CXX environment variable to clang++. For example, when in the root of the repo, run the following:
 
 export CXX=clang++
+
 make -C test
 
 If the compiler has troubles finding the necessary standard library includes you may need to massage the makefile.
