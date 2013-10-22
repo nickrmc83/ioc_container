@@ -7,7 +7,7 @@ A C++ IOC container capable of constructor dependency injection and runtime regi
 
 The source is known to both build and work when compiled with g++ 4.7 and Clang 3.0 C++ compilers. It uses a number of C++11 features including variadic templates and automatic type deduction and so requires the appropriate compiler switches to allow the use of such features e.g. -std=c++0x.
 
-Tutorial:
+Tutorial
 ---------
 
 Two simple examples of registering a types with and without any constrctor dependencies is outlined below. The example shows how a type bar derived from foo can be registered with the IOC container and later an instance can be resolved from the same container for use later. The example later shows how a type dah, which is derived from lardy and requires an instance of foo for constrction, can be registered, resolved and used.
