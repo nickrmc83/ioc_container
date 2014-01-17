@@ -162,7 +162,7 @@ void RegisterAndResolve()
 	// Register a Bar which implements Foo
 	Container.register_type<Foo, Bar>();
 	// Register a custom delegate which requires a derivable type Foo.
-	Container.register_delegate<SomeType, Foo>( &GetSomeTypeInstance );
+	Container.register_delegate<SomeType, Foo>( GetSomeTypeInstance );
 
 	// elided
 	
