@@ -71,7 +71,8 @@ void RegisterDelegateExample()
 {
 	// Register
 	typedef SomeType (*DelegateSignature)( foo * );
-	Container.register_delegate<SomeType, DelegateSignature, foo>( &DoSomething );
+	Container.register_delegate<SomeType, DelegateSignature, foo>( 
+DoSomething );
 
 	// elided
 
