@@ -17,6 +17,7 @@
 #include <string>
 #include <cstring>
 #include <memory>
+#include <typeindex>
 
 namespace ioc
 {
@@ -217,12 +218,16 @@ namespace ioc
         private:
             std::string type_name;
             std::string registration_name;
+            std::string error;
         public:
             registration_exception( const std::string &type_name_in, 
                     const std::string &registration_name_in )
                 : std::exception(), type_name( type_name_in ), 
                 registration_name( registration_name_in )
         {
+            error = std::string( "Previous registration of type (Type: " ) +
+                    type_name + std::string( " , " ) + registration_name + 
+                    std::string( ")" );
         }
 
             ~registration_exception() throw()
@@ -241,10 +246,6 @@ namespace ioc
 
             const char *what() const throw()
             {
-                std::string error = 
-                    std::string( "Previous registration of type (Type: " ) +
-                    type_name + std::string( " , " ) + registration_name + 
-                    std::string( ")" );
                 return error.c_str(); 
             }
     };
@@ -268,7 +269,7 @@ namespace ioc
             // Internal map of registered types -> map of named instances of
             // type factories.
             typedef std::map<std::string, ifactory*> named_factory;
-            typedef std::map<size_t, named_factory> registration_types;
+            typedef std::map<std::type_index, named_factory> registration_types;
 
             registration_types types;
 
@@ -296,7 +297,7 @@ namespace ioc
                                 name_in );
                     }
                     F *new_factory = new F( name_in, args... );
-                    types[typeid(I).hash_code()][name_in] = new_factory;
+                    types[std::type_index(typeid(I))][name_in] = new_factory;
                 }
             
             // Resolve factory for interface. If that fails then return NULL.
@@ -306,7 +307,7 @@ namespace ioc
                     // Lookup interface type. If it cannot be found return
                     // the default for that type.
                     ifactory *result = NULL;
-                    registration_types::const_iterator i = types.find(typeid(I).hash_code());
+                    registration_types::const_iterator i = types.find(std::type_index(typeid(I)));
                     if( i != types.end() )
                     {
                         const named_factory candidates =
@@ -325,7 +326,7 @@ namespace ioc
                     // Lookup interface type. If it cannot be found return
                     // the default for that type.
                     ifactory *result = NULL;
-                    registration_types::const_iterator i = types.find(typeid(I).hash_code());
+                    registration_types::const_iterator i = types.find(std::type_index(typeid(I)));
                     if( i != types.end() )
                     {
                         // We've got the type registered but we now need to look
@@ -473,14 +474,13 @@ namespace ioc
                 bool remove_registration()
                 {
                     bool result = false;
-                    registration_types::iterator i = types.find(typeid(I).hash_code());
+                    registration_types::iterator i = types.find(std::type_index(typeid(I)));
                     if( i != types.end() )
                     {
                         for( named_factory::iterator j = i->second.begin(); 
                                 j != i->second.end(); ++j )
                         {
                             destroy_factory( j->second );
-                            i->second.erase( j ); 
                         }
                         types.erase(i);
                         result = true;
@@ -494,7 +494,7 @@ namespace ioc
                 bool remove_registration_by_name( const std::string &name_in )
                 {
                     bool result = false;
-                    registration_types::iterator i = types.find(typeid(I).hash_code());
+                    registration_types::iterator i = types.find(std::type_index(typeid(I)));
                     if( i != types.end() )
                     {
                         named_factory::iterator j = i->second.find(name_in); 
