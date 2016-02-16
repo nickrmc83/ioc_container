@@ -24,15 +24,12 @@ EXINST=typeinfo,stdlib.h,string,stl_vector.h,stl_iterator.h
 
 # Linux can use clang++ 3.x or g++ 4.7
 all:
-ifeq ($(CXX),clang)
 	$(CXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
-# Windows uses g++ 4.7 January 2012
-else
-	$(CXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
-endif
+
 # Code coverage using gcov
 cov:
 	$(CXX) $(INCLUDES) -g $(CPP) $(CFLAGS) $(COV_FLAGS) -o $(OUTPUT)
+
 # instrementation build
 inst:
 	$(CXX) $(INCLUDES) $(CPP) instrument.cpp $(CFLAGS) -o $(OUTPUT) -finstrument-functions -finstrument-functions-exclude-file-list=$(EXINST)
