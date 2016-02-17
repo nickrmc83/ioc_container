@@ -14,7 +14,7 @@ CFLAGS=-std=c++0x -Wall -g -O0
 COV_FLAGS=-fprofile-arcs -ftest-coverage
 
 # Source files
-CPP=main.cpp
+SRCS=main.cpp
 
 # Output name
 OUTPUT=test_app
@@ -28,15 +28,15 @@ all : $(OUTPUT) run_cov
 
 # Linux can use clang++ 3.x or g++ 4.7
 $(OUTPUT):
-	$(CXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
+	$(CXX) $(INCLUDES) $(SRCS) $(CFLAGS) -o $(OUTPUT)
 
 # Code coverage using gcov
 $(OUTPUT).cov:
-	$(CXX) $(INCLUDES) -g $(CPP) $(CFLAGS) $(COV_FLAGS) -o $@
+	$(CXX) $(INCLUDES) -g $(SRCS) $(CFLAGS) $(COV_FLAGS) -o $@
 
 run_cov : $(OUTPUT).cov
 	./$<
-	gcov -r $(CPP)
+	gcov -r $(SRCS)
 
 clean:
 	rm -r -f $(OUTPUT)*
