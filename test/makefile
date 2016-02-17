@@ -22,18 +22,26 @@ OUTPUT=test_app
 # files to exclude from instrumentation
 EXINST=typeinfo,stdlib.h,string,stl_vector.h,stl_iterator.h
 
+.PHONY:all run_cov
+
+all : $(OUTPUT) run_cov
+
 # Linux can use clang++ 3.x or g++ 4.7
-all:
+$(OUTPUT):
 	$(CXX) $(INCLUDES) $(CPP) $(CFLAGS) -o $(OUTPUT)
 
 # Code coverage using gcov
-cov:
-	$(CXX) $(INCLUDES) -g $(CPP) $(CFLAGS) $(COV_FLAGS) -o $(OUTPUT)
+$(OUTPUT).cov:
+	$(CXX) $(INCLUDES) -g $(CPP) $(CFLAGS) $(COV_FLAGS) -o $@
 
-# instrementation build
-inst:
-	$(CXX) $(INCLUDES) $(CPP) instrument.cpp $(CFLAGS) -o $(OUTPUT) -finstrument-functions -finstrument-functions-exclude-file-list=$(EXINST)
+run_cov : $(OUTPUT).cov
+	./$<
+	gcov -r $(CPP)
+
 clean:
 	rm -r -f $(OUTPUT)*
 	rm -r -f ../*~
 	rm -r -f *~
+	rm -r -f *.gcov
+	rm -r -f *.gcno
+	rm -r -f *.gcda
