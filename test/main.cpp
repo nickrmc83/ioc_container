@@ -421,7 +421,7 @@ static TestStatus TestRegisterMoreThanOneTypeWithTheSameName()
 }
 
 // Test if types which are automatically resolved, during resolution of
-// a complex, are de-aalocated if an exception is thrown during the
+// a complex variant, are de-allocated if an exception is thrown during the
 // constructor of a complex type.
 static TestStatus TestResolveComplexTypeClearsUpConstructedTypesOnError()
 {
