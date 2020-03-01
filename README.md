@@ -10,7 +10,7 @@ The source is known to both build and work when compiled with g++ 4.7 and Clang 
 Tutorial
 ---------
 
-Two simple examples of registering a types with and without any constrctor dependencies is outlined below. The example shows how a type bar derived from foo can be registered with the IOC container and later an instance can be resolved from the same container for use later. The example later shows how a type dah, which is derived from lardy and requires an instance of foo for constrction, can be registered, resolved and used.
+Two simple examples of registering types with and without any constrctor dependencies is outlined below. The example shows how a type bar derived from foo can be registered with the IOC container and later an instance can be resolved from the same container for use later. The example later shows how a type dah, which is derived from lardy and requires an instance of foo for constrction, can be registered, resolved and used.
 
 ```cpp
 // Example. Simple registration and resolution
