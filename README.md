@@ -10,14 +10,14 @@ The source is known to both build and work when compiled with g++ 4.7 and Clang 
 Tutorial
 ---------
 
-Two simple examples of registering types with and without any constrctor dependencies is outlined below. The example shows how a type bar derived from foo can be registered with the IOC container and later an instance can be resolved from the same container for use later. The example later shows how a type dah, which is derived from lardy and requires an instance of foo for constrction, can be registered, resolved and used.
+Two simple examples of registering types with and without any constructor dependencies is outlined below. The example shows how a type bar derived from foo can be registered with the IOC container and later an instance can be resolved from the same container for use later. The example later shows how a type dah, which is derived from lardy and requires an instance of foo for construction, can be registered, resolved and used.
 
 ```cpp
 // Example. Simple registration and resolution
 int main(char **args, int argv)
 {
 	// Create an instance of an
-	// ioc::conatianer
+	// ioc::container
 	ioc::container Container;
 
 	// Register bar which is derived
@@ -40,7 +40,7 @@ int main(char **args, int argv)
 	// elided
 
 	// Resolve a new instance of lardy
-	std::shared_ptr<lardy> lardyInstance = Container.resolve<Lardy>();
+	std::shared_ptr<lardy> lardyInstance = Container.resolve<lardy>();
 	// Call some method on our resolved
 	// instance
 	lardyInstance->Call();
@@ -49,23 +49,11 @@ int main(char **args, int argv)
 };
 ```
 
-As well as being able to register types with dependant constructor parameters, it is also possible to register delgates (callable objects such as functions or classes which implement operator ()) and Instances (an instance in this context means registering a pre-constructed object which maybe resolved at a later date). Delegates like standard registrations can require dependendant types in their signature. For example, the below code illustrates how to register a delegate which requires the type foo which we register earlier.
+As well as being able to register types with dependant constructor parameters, it is also possible to register delegates (callable objects such as functions or classes which implement operator ()) and instances (an instance in this context means registering a pre-constructed object which maybe resolved at a later date). Delegates like standard registrations can require dependendant types in their signature. For example, the below code illustrates how to register a delegate which requires the type foo which we registered earlier.
 
 ```cpp
 // Example. Delegate registration
-static SomeType *DoSomething( std::shared_ptr<foo> obj )
-{
-	SomeType *Result = NULL:
-	if( obj.get() )
-	{
-		// New an instance of SomeDerivedType which
-		// derives from SomeType. Pass obj to the
-		// constructor as well as some non-resolvable
-		// constructor parameters
-		Result = new SomeDerivedType( obj, 10, "WOOOO" );
-	}
-	return Result;
-}
+
 
 void RegisterDelegateExample()
 {
@@ -90,7 +78,7 @@ To register a specific instance of a class which can later be resolved the below
 void RegisterInstanceExample()
 {
 	// Register
-	std::shared_ptr<SomeDervied_type> singleton( new SomeDerivedType() );
+	std::shared_ptr<SomeDerivedType> singleton( new SomeDerivedType() );
 	Container.register_instance<SomeType>( singleton );
 
 	// elided
@@ -101,7 +89,7 @@ void RegisterInstanceExample()
 }
 ```
 
-Standard resoltuion (Resolve<Type>()) searches for the first matching registered type in the IOC containers dependency list. However, it is not possible to register two identical types unless using named registration. Named registration allows multiple matching types to be registered with the caveat that each is accompanied by a name by which it maybe resolved. For example the below code will throw a RegistrationException when the second registration is attempted.
+Standard resolution (Resolve<Type>()) searches for the first matching registered type in the IOC containers dependency list. However, it is not possible to register two identical types unless using named registration. Named registration allows multiple matching types to be registered with the caveat that each is accompanied by a name by which it maybe resolved. For example the below code will throw a RegistrationException when the second registration is attempted.
 
 ```cpp
 // Example. Matching registration exception
@@ -141,7 +129,7 @@ void RegisterAndResolveSomeTypes()
 FAQ:
 ----
 
-Q) What happens if an exception is thrown during construction of complex types? If a constrcutor parameter has already been resolved and an exception is thrown in our target types constructor does a memory leak occur?
+Q) What happens if an exception is thrown during construction of complex types? If a constructor parameter has already been resolved and an exception is thrown in our target types constructor does a memory leak occur?
 
 A) Due to the way in which the code is structured, objects which are newed and deletable i.e. not instance registrations, are automatically destructed before an exception reaches the outlying application.
 
@@ -152,24 +140,25 @@ A) This is where delgates come to the fore. The below example shows the registra
 ```cpp
 // Declare delegate which requires a derivable type
 // as a constructor argument
-static SomeType *GetSomeTypeInstance( std::shared_ptr<Foo> SomeFoo )
+static SomeType *GetSomeTypeInstance( std::shared_ptr<foo> SomeFoo )
 {
 	return new SomeDerivedType( "MyNonDerivableParam", 10, 12, SomeFoo );
 }
 
 void RegisterAndResolve()
 {
-	// Register a Bar which implements Foo
-	Container.register_type<Foo, Bar>();
-	// Register a custom delegate which requires a derivable type Foo.
-	Container.register_delegate<SomeType, Foo>( GetSomeTypeInstance );
+	// Register a bar which implements foo
+	Container.register_type<foo, bar>();
+	// Register a custom delegate which requires a derivable type foo.
+	typedef SomeType (*DelegateSignature)( foo * );
+	Container.register_delegate<SomeType, DelegateSignature, foo>( GetSomeTypeInstance );
 
 	// elided
 	
 	// Resolve a new instance of SomeType. Internally the IOC container
-	// will identify SomeType requires an instance of Foo, derive an
-	// instance of Foo, finally call our GetSomeTypeInstance delegate
-	// with our resolved instance of Foo.
+	// will identify SomeType requires an instance of foo, derive an
+	// instance of foo, finally call our GetSomeTypeInstance delegate
+	// with our resolved instance of foo.
 	std::shared_ptr<SomeType> inst = Container.resolve<SomeType>();
 	// Do something
 	inst->DoSomething();
