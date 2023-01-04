@@ -567,6 +567,45 @@ static TestStatus TestRegisterDelegateWithName()
     return Result;
 }
 
+static ComplexConcretion *CreateComplexConcretion( std::shared_ptr<Concretion> concretion )
+{
+       ComplexConcretion *Result = NULL;
+    if( concretion.get() )
+       {
+               // New an instance of SomeDerivedType which
+               // derives from SomeType. Pass obj to the
+               // constructor as well as some non-resolvable
+               // constructor parameters
+               Result = new ComplexConcretion( concretion );
+       }
+       return Result;
+}
+
+static TestStatus TestRegisterDelegateWithParameter()
+{
+    TestStatus Result = TS_Registration_Error;
+    ioc::container container;
+    try
+    {
+        container.register_type<Concretion, Concretion>();
+        typedef ComplexConcretion* (*ComplexDelegateSignature)( std::shared_ptr<Concretion> );
+        container.register_delegate<ComplexConcretion, ComplexDelegateSignature, Concretion>( CreateComplexConcretion );
+        std::shared_ptr<ComplexConcretion> r = container.resolve<ComplexConcretion>();
+        if( r.get() != NULL && r->InnerInstance.get() != NULL )
+        {
+            Result = TS_Success;
+        }
+    }
+    catch( const std::exception &e )
+    {
+        PrintException( __func__, e );
+    }
+
+    return Result;
+}
+
+
+
 // Helper macro for registering tests with a name.
 #define REGISTER_TEST( v, x ) ( v.push_back( TestFunctionObject( #x, &x ) ) ) 
 // Register all test functions within this function
@@ -590,6 +629,7 @@ static std::vector<TestFunctionObject> GetRegisteredTests()
     REGISTER_TEST( Result, TestRemoveRegistrationByName );
     REGISTER_TEST( Result, TestRegisterDelegate );
     REGISTER_TEST( Result, TestRegisterDelegateWithName );
+    REGISTER_TEST( Result, TestRegisterDelegateWithParameter );
     return Result;
 }
 #undef REGISTER_TEST
