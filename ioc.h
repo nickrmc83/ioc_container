@@ -41,9 +41,9 @@ namespace ioc
             virtual void* create_item() const = 0;
     };
 
-    // BaseFatory extends ifactory to provide some standard
+    // BaseFactory extends ifactory to provide some standard
     // functionality that is required by most concrete
-    // factoy types.
+    // factory types.
     template<typename I>
         class base_factory : public ifactory
     {
@@ -184,7 +184,7 @@ namespace ioc
             }
     };
 
-    // isntance_factory stores an instance of the required type.
+    // instance_factory stores an instance of the required type.
     // create_item simply returns the stored instance.
     // It should be noted that there is no guard around the instance
     // to stop it being deleted by some other object once it has
@@ -368,7 +368,7 @@ namespace ioc
                 types.clear();
             }
 
-            // Check if a factory to create a gievn interface
+            // Check if a factory to create a given interface
             // already exists
             template<typename I>
                 bool type_is_registered( const std::string &name_in ) const
